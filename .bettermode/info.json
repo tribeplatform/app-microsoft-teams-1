@@ -1,0 +1,12 @@
+{
+  "id": "bkLQ5aJ8LHSe",
+  "name": "Microsoft teams",
+  "slug": "microsoft-teams",
+  "status": "PRIVATE",
+  "standing": "OFFICIAL",
+  "description": "An integration to sync your Teams with your community",
+  "authorName": "Bettermode Engineering @bettermode",
+  "authorUrl": "https://bettermode.com",
+  "privacyPolicyUrl": "https://bettermode.io/privacy-policy",
+  "termsOfServiceUrl": "https://bettermode.io/terms-of-service"
+}

@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Dev app-microsoft-teams",
+            "command": "yarn dev"
+        },
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Start app-microsoft-teams",
+            "command": "yarn start"
+        },
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Test app-microsoft-teams",
+            "command": "yarn test"
+        },
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Lint app-microsoft-teams",
+            "command": "yarn lint"
+        },
+        {
+            "type": "node-terminal",
+            "request": "launch",
+            "name": "Lint:Fix app-microsoft-teams",
+            "command": "yarn lint:fix"
+        }
+    ]
+}
