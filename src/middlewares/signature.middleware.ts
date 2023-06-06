@@ -1,14 +1,15 @@
-import { NextFunction, Request, Response } from 'express'
-
 import { IGNORE_SIGNATURE, SIGNING_SECRET } from '@config'
-import { HttpException } from '@exceptions'
+import { HttpError } from '@errors'
+import { Request } from '@interfaces'
 import { verifySignature } from '@logics'
-import { logger } from '@utils'
+import { globalLogger } from '@utils'
+import { NextFunction, Response } from 'express'
+
+const logger = globalLogger.setContext('signatureMiddleware')
 
 export const signatureMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const timestamp = parseInt(req.header('x-tribe-request-timestamp'), 10)
-  const signature = req.header('x-tribe-signature')
-  const rawBody = req['rawBody']
+  const timestamp = parseInt(req.header('x-bettermode-request-timestamp'), 10)
+  const signature = req.header('x-bettermode-signature')
 
   if (IGNORE_SIGNATURE) {
     return next()
@@ -16,13 +17,19 @@ export const signatureMiddleware = (req: Request, res: Response, next: NextFunct
 
   try {
     if (
-      rawBody &&
-      verifySignature({ body: rawBody, timestamp, secret: SIGNING_SECRET, signature })
+      req.rawBody &&
+      verifySignature({
+        body: req.rawBody.toString(),
+        timestamp,
+        secret: SIGNING_SECRET,
+        signature,
+      })
     ) {
       return next()
     }
   } catch (err) {
     logger.error(err)
   }
-  return next(new HttpException(403, 'The x-tribe-signature is not valid.'))
+
+  return next(new HttpError(403, 'The x-bettermode-signature is not valid.'))
 }

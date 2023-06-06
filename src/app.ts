@@ -1,15 +1,26 @@
-import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config'
+import {
+  CREDENTIALS,
+  DATABASE_URL,
+  LOG_ACCESS,
+  NODE_ENV,
+  ORIGIN,
+  PORT,
+  SESSION_SECRET,
+} from '@config'
+import { Request } from '@interfaces'
 import { errorMiddleware } from '@middlewares'
-import { logger, stream } from '@utils'
+import { globalLogger, stream } from '@utils'
+import bodyParser from 'body-parser'
 import { defaultMetadataStorage } from 'class-transformer'
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema'
 import compression from 'compression'
+import MongoStore from 'connect-mongo'
 import cookieParser from 'cookie-parser'
 import express from 'express'
+import session from 'express-session'
 import helmet from 'helmet'
 import hpp from 'hpp'
 import morgan from 'morgan'
-import 'reflect-metadata'
 import { getMetadataArgsStorage, useExpressServer } from 'routing-controllers'
 import { routingControllersToSpec } from 'routing-controllers-openapi'
 import swaggerUi from 'swagger-ui-express'
@@ -31,12 +42,16 @@ class App {
   }
 
   public listen() {
-    this.app.listen(this.port, () => {
-      logger.info(`=================================`)
-      logger.info(`======= ENV: ${this.env} =======`)
-      logger.info(`🚀 App listening on the port ${this.port}`)
-      logger.info(`=================================`)
+    const server = this.app.listen(this.port, () => {
+      globalLogger.info(`=================================`)
+      globalLogger.info(`======= ENV: ${this.env} ========`)
+      globalLogger.info(`🚀 App listening on the port ${this.port}`)
+      globalLogger.info(`=================================`)
     })
+    server.on('error', error => {
+      globalLogger.error(error)
+    })
+    return server
   }
 
   public getServer() {
@@ -44,13 +59,32 @@ class App {
   }
 
   private initializeMiddlewares() {
-    this.app.use(morgan(LOG_FORMAT, { stream }))
+    this.app.use(
+      bodyParser.json({
+        verify: (req: Request, res, buf) => {
+          req.rawBody = buf
+        },
+      }),
+    )
+    if (LOG_ACCESS) this.app.use(morgan('dev', { stream }))
     this.app.use(hpp())
     this.app.use(helmet())
     this.app.use(compression())
     this.app.use(express.json())
     this.app.use(express.urlencoded({ extended: true }))
     this.app.use(cookieParser())
+    this.app.use(
+      session({
+        secret: SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        store: MongoStore.create({
+          mongoUrl: DATABASE_URL,
+          touchAfter: 1 * 3600,
+          ttl: 2 * 60 * 60,
+        }),
+      }),
+    )
   }
 
   private initializeRoutes(controllers: Function[]) {
@@ -59,7 +93,7 @@ class App {
         origin: ORIGIN,
         credentials: CREDENTIALS,
       },
-      controllers: controllers,
+      controllers,
       defaultErrorHandler: false,
     })
   }
@@ -71,7 +105,7 @@ class App {
     })
 
     const routingControllersOptions = {
-      controllers: controllers,
+      controllers,
     }
 
     const storage = getMetadataArgsStorage()

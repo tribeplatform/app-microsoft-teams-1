@@ -1,6 +1,9 @@
-import App from '@/app'
+import 'reflect-metadata'
+
 import Controllers from '@controllers'
 import { validateEnv } from '@utils'
+
+import App from '@/app'
 
 validateEnv()
 

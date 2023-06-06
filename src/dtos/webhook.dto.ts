@@ -1,18 +1,20 @@
-import { WebhookContext, WebhookType } from '@enums'
+import { WebhookType } from '@enums'
 import { BaseWebhook } from '@interfaces'
+import { PermissionContext } from '@tribeplatform/gql-client/types'
 import { Type } from 'class-transformer'
 import { IsArray, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator'
+
 import { AppSettingDto } from './app-setting.dto'
 
-export class WebhookDto<P = unknown> implements BaseWebhook {
+export class WebhookDto<T = unknown> implements BaseWebhook {
   @IsEnum(WebhookType)
   type: WebhookType
 
   @IsString()
   networkId: string
 
-  @IsEnum(WebhookContext)
-  context: WebhookContext
+  @IsEnum(PermissionContext)
+  context: PermissionContext
 
   @IsOptional()
   @IsString()
@@ -24,5 +26,5 @@ export class WebhookDto<P = unknown> implements BaseWebhook {
   currentSettings: AppSettingDto[]
 
   @IsOptional()
-  data?: P
+  data?: T
 }

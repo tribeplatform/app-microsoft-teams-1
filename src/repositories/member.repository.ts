@@ -1,32 +1,34 @@
-import { Member, PrismaClient } from '@prisma/client'
+import { Member, Prisma, PrismaClient } from '@prisma/client'
 
 const client = new PrismaClient()
 
-type MemberWithoutId = Omit<Member, 'id'>
-type PartialMemberWithoutId = Partial<MemberWithoutId>
-
-export class MemberRepository {
-  static async create(member: MemberWithoutId): Promise<Member> {
-    return await client.member.create({ data: member })
-  }
-
-  static async update(id: string, data: PartialMemberWithoutId): Promise<Member> {
-    return await client.member.update({ where: { id }, data })
-  }
-
-  static async upsert(member: MemberWithoutId): Promise<Member> {
-    return await client.member.upsert({
-      create: member,
-      update: member,
-      where: { memberId: member.memberId },
+export const MemberRepository = {
+  create: (data: Prisma.MemberCreateArgs['data']): Promise<Member> => {
+    return client.member.create({ data })
+  },
+  update: (memberId: string, data: Prisma.MemberUpdateArgs['data']): Promise<Member> => {
+    return client.member.update({ where: { memberId }, data })
+  },
+  upsert: (
+    memberId: string,
+    data: Omit<Prisma.MemberCreateArgs['data'], 'memberId'>,
+  ): Promise<Member> => {
+    return client.member.upsert({
+      create: { memberId, ...data },
+      update: data,
+      where: { memberId },
     })
-  }
-
-  static async delete(id: string): Promise<Member> {
-    return await client.member.delete({ where: { id } })
-  }
-
-  static async findMany(): Promise<Member[]> {
-    return await client.member.findMany()
-  }
+  },
+  delete: (memberId: string): Promise<Member> => {
+    return client.member.delete({ where: { memberId } })
+  },
+  findMany: (args?: Prisma.MemberFindManyArgs): Promise<Member[]> => {
+    return client.member.findMany(args)
+  },
+  findUniqueOrThrow: (memberId: string): Promise<Member> => {
+    return client.member.findUniqueOrThrow({ where: { memberId } })
+  },
+  findUnique: (memberId: string): Promise<Member> => {
+    return client.member.findUnique({ where: { memberId } })
+  },
 }

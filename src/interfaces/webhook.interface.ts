@@ -1,20 +1,32 @@
-import { WebhookContext, WebhookType } from '@enums'
+import { WebhookType } from '@enums'
+import { Member, Network, PermissionContext } from '@tribeplatform/gql-client/types'
+
 import { AppInstallation, AppSettings } from './app.interface'
-import { Event } from './event.interface'
+import { BaseEventObject, Event } from './event.interface'
 import { FederatedSearch } from './federated-search.interface'
 import { InteractionInput } from './interaction.interface'
+import { ShortcutStatesInput } from './shortcut-states.interface'
 
 export interface Challenge {
   challenge: string
 }
 
+// Use Lite types
+export interface WebhookEntities {
+  network?: Network
+  actor?: Member
+  owner?: Member
+  targetMember?: Member
+}
+
 export interface BaseWebhook {
   type: WebhookType
   networkId: string
-  context: WebhookContext
+  context: PermissionContext
   entityId?: string
   currentSettings: AppSettings[]
   data?: unknown
+  entities?: WebhookEntities
 }
 
 export interface TestWebhook extends BaseWebhook {
@@ -42,9 +54,15 @@ export interface InteractionWebhook extends BaseWebhook {
   data: InteractionInput
 }
 
-export interface SubscriptionWebhook extends BaseWebhook {
+export interface ShortcutStatesWebhook extends BaseWebhook {
+  type: WebhookType.ShortcutsStates
+  data: ShortcutStatesInput
+}
+
+export interface SubscriptionWebhook<T extends BaseEventObject = BaseEventObject>
+  extends BaseWebhook {
   type: WebhookType.Subscription
-  data: Event
+  data: Event<T>
 }
 
 export type Webhook =
@@ -53,4 +71,5 @@ export type Webhook =
   | AppUninstalledWebhook
   | FederatedSearchWebhook
   | InteractionWebhook
+  | ShortcutStatesWebhook
   | SubscriptionWebhook

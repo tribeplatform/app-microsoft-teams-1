@@ -5,19 +5,29 @@ import {
   FederatedSearchWebhookResponse,
   InteractionWebhook,
   InteractionWebhookResponse,
+  TestWebhook,
+  TestWebhookResponse,
   Webhook,
   WebhookResponse,
 } from '@interfaces'
+import {
+  getChallengeResponse,
+  getShortcutStatesResponse,
+  handleFederatedSearchWebhook,
+  handleInstalledWebhook,
+  handleInteractionWebhook,
+  handleSubscriptionWebhook,
+  handleUninstalledWebhook,
+} from '@logics'
 import { signatureMiddleware, validationMiddleware } from '@middlewares'
-import { WebhookService } from '@services'
-import { logger } from '@utils'
+import { globalLogger } from '@utils'
 import { Body, Controller, HttpCode, Post, UseBefore } from 'routing-controllers'
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi'
 
 @Controller('/webhook')
 @UseBefore(signatureMiddleware)
 export class WebhookController {
-  readonly webhookService = new WebhookService()
+  readonly logger = globalLogger.setContext(WebhookController.name)
 
   @Post()
   @UseBefore(validationMiddleware(WebhookDto, 'body'))
@@ -25,19 +35,21 @@ export class WebhookController {
   @ResponseSchema(WebhookResponseDto)
   @HttpCode(200)
   async receiveWebhook(@Body() webhook: Webhook): Promise<WebhookResponse> {
-    logger.verbose('Received webhook', webhook)
+    this.logger.verbose('Received webhook', webhook)
 
     switch (webhook.type) {
       case WebhookType.Test:
-        return this.webhookService.handleTestWebhook(webhook)
+        return getChallengeResponse(webhook)
       case WebhookType.AppInstalled:
-        return this.webhookService.handleInstalledWebhook(webhook)
+        return handleInstalledWebhook(webhook)
       case WebhookType.AppUninstalled:
-        return this.webhookService.handleUninstalledWebhook(webhook)
+        return handleUninstalledWebhook(webhook)
       case WebhookType.Subscription:
-        return this.webhookService.handleSubscriptionWebhook(webhook)
+        return handleSubscriptionWebhook(webhook)
+      case WebhookType.ShortcutsStates:
+        return getShortcutStatesResponse(webhook)
       default:
-        logger.verbose('Received unknown webhook', webhook)
+        this.logger.verbose('Received unknown webhook', webhook)
         return {
           type: webhook.type,
           status: WebhookStatus.Succeeded,
@@ -51,11 +63,16 @@ export class WebhookController {
   @ResponseSchema(WebhookResponseDto)
   @HttpCode(200)
   async receiveFederatedSearch(
-    @Body() webhook: FederatedSearchWebhook,
-  ): Promise<FederatedSearchWebhookResponse> {
-    logger.verbose('Received federated search request', webhook)
+    @Body() webhook: TestWebhook | FederatedSearchWebhook,
+  ): Promise<TestWebhookResponse | FederatedSearchWebhookResponse> {
+    this.logger.verbose('Received federated search request', webhook)
 
-    return this.webhookService.handleFederatedSearchWebhook(webhook)
+    switch (webhook.type) {
+      case WebhookType.Test:
+        return getChallengeResponse(webhook)
+      default:
+        return handleFederatedSearchWebhook(webhook)
+    }
   }
 
   @Post('/interaction')
@@ -64,10 +81,15 @@ export class WebhookController {
   @ResponseSchema(WebhookResponseDto)
   @HttpCode(200)
   async receiveInteraction(
-    @Body() webhook: InteractionWebhook,
-  ): Promise<InteractionWebhookResponse> {
-    logger.verbose('Received interaction request', webhook)
+    @Body() webhook: TestWebhook | InteractionWebhook,
+  ): Promise<TestWebhookResponse | InteractionWebhookResponse> {
+    this.logger.verbose('Received interaction request', webhook)
 
-    return this.webhookService.handleInteractionWebhook(webhook)
+    switch (webhook.type) {
+      case WebhookType.Test:
+        return getChallengeResponse(webhook)
+      default:
+        return handleInteractionWebhook(webhook)
+    }
   }
 }

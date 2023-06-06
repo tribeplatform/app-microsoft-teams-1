@@ -1,32 +1,37 @@
-import { Network, PrismaClient } from '@prisma/client'
+import { Network, Prisma, PrismaClient } from '@prisma/client'
 
 const client = new PrismaClient()
 
-type NetworkWithoutId = Omit<Network, 'id'>
-type PartialNetworkWithoutId = Partial<NetworkWithoutId>
-
-export class NetworkRepository {
-  static async create(network: NetworkWithoutId): Promise<Network> {
-    return await client.network.create({ data: network })
-  }
-
-  static async update(id: string, data: PartialNetworkWithoutId): Promise<Network> {
-    return await client.network.update({ where: { id }, data })
-  }
-
-  static async upsert(network: NetworkWithoutId): Promise<Network> {
-    return await client.network.upsert({
-      create: network,
-      update: network,
-      where: { networkId: network.networkId },
+export const NetworkRepository = {
+  create: (data: Prisma.NetworkCreateArgs['data']): Promise<Network> => {
+    return client.network.create({ data })
+  },
+  update: (
+    networkId: string,
+    data: Prisma.NetworkUpdateArgs['data'],
+  ): Promise<Network> => {
+    return client.network.update({ where: { networkId }, data })
+  },
+  upsert: (
+    networkId: string,
+    data: Omit<Prisma.NetworkCreateArgs['data'], 'networkId'>,
+  ): Promise<Network> => {
+    return client.network.upsert({
+      create: { networkId, ...data },
+      update: data,
+      where: { networkId },
     })
-  }
-
-  static async delete(id: string): Promise<Network> {
-    return await client.network.delete({ where: { id } })
-  }
-
-  static async findMany(): Promise<Network[]> {
-    return await client.network.findMany()
-  }
+  },
+  delete: (networkId: string): Promise<Network> => {
+    return client.network.delete({ where: { networkId } })
+  },
+  findMany: (args?: Prisma.NetworkFindManyArgs): Promise<Network[]> => {
+    return client.network.findMany(args)
+  },
+  findUniqueOrThrow: (networkId: string): Promise<Network> => {
+    return client.network.findUniqueOrThrow({ where: { networkId } })
+  },
+  findUnique: (networkId: string): Promise<Network> => {
+    return client.network.findUnique({ where: { networkId } })
+  },
 }

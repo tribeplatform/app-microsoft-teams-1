@@ -21,15 +21,15 @@
     "importHelpers": true,
     "baseUrl": "src",
     "paths": {
+      "@clients": ["clients"],
       "@config": ["config"],
       "@controllers": ["controllers"],
       "@dtos": ["dtos"],
       "@enums": ["enums"],
-      "@exceptions": ["exceptions"],
+      "@errors": ["errors"],
       "@interfaces": ["interfaces"],
       "@middlewares": ["middlewares"],
       "@repositories": ["repositories"],
-      "@services": ["services"],
       "@logics": ["logics"],
       "@utils": ["utils"],
       "@/*": ["*"]
