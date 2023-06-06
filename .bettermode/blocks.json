@@ -1,7 +1,9 @@
 {
   "defaults": [
     {
-      "key": "settings"
+      "key": "settings",
+      "interactionUrl": null,
+      "contexts": null
     }
   ],
   "customs": []

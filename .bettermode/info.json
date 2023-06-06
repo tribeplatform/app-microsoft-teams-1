@@ -5,6 +5,8 @@
   "status": "PRIVATE",
   "standing": "OFFICIAL",
   "description": "An integration to sync your Teams with your community",
+  "image": null,
+  "favicon": null,
   "authorName": "Bettermode Engineering @bettermode",
   "authorUrl": "https://bettermode.com",
   "privacyPolicyUrl": "https://bettermode.io/privacy-policy",
