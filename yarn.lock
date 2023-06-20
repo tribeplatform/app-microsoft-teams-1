@@ -22,6 +22,15 @@
   resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-13.1.0.tgz#73a787ec1e7880c30b187cf451404af547d95339"
   integrity sha512-wj+ULrRB0HTuMmtrMjg8j3guCx32GE2BCPbsMCZkHgL1BZetC3o/Su5UJEQMX1HNc9CrIaQNx5WaKWHygYDe0g==
 
+"@azure/msal-node@^1.17.3":
+  version "1.17.3"
+  resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-1.17.3.tgz#1a0bbecb0b3e5e63d50ccb27c9cb3bae5a6c1b65"
+  integrity sha512-slsa+388bQQWnWH1V91KL+zV57rIp/0OQFfF0EmVMY8gnEIkAnpWWFUVBTTMbxEyjEFMk5ZW9xiHvHBcYFHzDw==
+  dependencies:
+    "@azure/msal-common" "13.1.0"
+    jsonwebtoken "^9.0.0"
+    uuid "^8.3.0"
+
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.12.13", "@babel/code-frame@^7.18.6":
   version "7.18.6"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.18.6.tgz"
@@ -4686,6 +4695,16 @@ jsonwebtoken@^8.5.1:
     ms "^2.1.1"
     semver "^5.6.0"
 
+jsonwebtoken@^9.0.0:
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/jsonwebtoken/-/jsonwebtoken-9.0.0.tgz#d0faf9ba1cc3a56255fe49c0961a67e520c1926d"
+  integrity sha512-tuGfYXxkQGDPnLJ7SibiQgVgeDgfbPq2k2ICcbgqW8WxWLBAxKQM/ZCu/IT8SOSwmaYl4dpTFCW5xZv7YbbWUw==
+  dependencies:
+    jws "^3.2.2"
+    lodash "^4.17.21"
+    ms "^2.1.1"
+    semver "^7.3.8"
+
 "jsx-ast-utils@^2.4.1 || ^3.0.0", jsx-ast-utils@^3.2.1, jsx-ast-utils@^3.3.2:
   version "3.3.3"
   resolved "https://registry.npmjs.org/jsx-ast-utils/-/jsx-ast-utils-3.3.3.tgz"
@@ -4981,7 +5000,7 @@ lodash.startcase@^4.4.0:
   resolved "https://registry.npmjs.org/lodash.startcase/-/lodash.startcase-4.4.0.tgz"
   integrity sha512-+WKqsK294HMSc2jEbNgpHpd0JfIBhp7rEV4aqXWqFr6AlXov+SlcgB1Fv01y2kGe3Gc8nMW7VA0SrGuSkRfIEg==
 
-lodash@^4.17.12, lodash@^4.17.14:
+lodash@^4.17.12, lodash@^4.17.14, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -7212,7 +7231,7 @@ uuid@^3.2.1:
   resolved "https://registry.npmjs.org/uuid/-/uuid-3.4.0.tgz"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
 
-uuid@^8.3.2:
+uuid@^8.3.0, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==

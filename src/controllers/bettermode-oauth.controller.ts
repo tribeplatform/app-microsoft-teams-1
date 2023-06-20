@@ -10,10 +10,13 @@ import {
   HttpCode,
   Params,
   Post,
+  Redirect,
+  Req,
   Res,
   UseBefore,
 } from 'routing-controllers'
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi'
+import { signIn, redirect } from '../logics/microsoft/authPopup'
 
 @Controller('/bettermode/oauth')
 export class BettermodeOAuthController {
@@ -44,4 +47,29 @@ export class BettermodeOAuthController {
 
     return getBettermodeOauthTokens(input)
   }
+
+
 }
+@Controller('/microsoft')
+export class AppController {
+  @Get()
+  async redirect(@Res() res: Response): Promise<Response> {
+    try {
+      const redirectUrl = await signIn();
+      res.redirect(302, redirectUrl);
+      return res;
+    } catch (error) {
+      // Handle any errors that occur during redirection
+      console.error(error);
+    }
+  }
+  @Get('/redirect')
+  @HttpCode(200)
+  @Redirect('/')
+  async token(@Req() req: Response): Promise<void> {
+    const token = await redirect(req);
+    
+    return
+  }
+}
+

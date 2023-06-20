@@ -1,102 +1,149 @@
 // Create the main myMSALObj instance
 // configuration parameters are located at authConfig.js
-import * as msal from "@azure/msal-browser";
-import { msalConfig, loginRequest, tokenRequest} from "./authConfig";
-const myMSALObj = new msal.PublicClientApplication(msalConfig);
+import * as msal from '@azure/msal-node'
+import { graphConfig } from './graphConfig'
+import { callMSGraph } from './callGraph'
+import { msalConfig, loginRequest, tokenRequest } from './authConfig'
+import { Redirect } from 'routing-controllers'
+var express = require('express')
+const msalInstance = new msal.ConfidentialClientApplication(msalConfig)
+const cryptoProvider = new msal.CryptoProvider()
 
-let username = "";
-
-function selectAccount() {
-
-    /**
-     * See here for more info on account retrieval: 
-     * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
-     */
-
-    const currentAccounts = myMSALObj.getAllAccounts();
-    if (currentAccounts.length === 0) {
-        return;
-    } else if (currentAccounts.length > 1) {
-        // Add choose account code here
-        console.warn("Multiple accounts detected.");
-    } else if (currentAccounts.length === 1) {
-        username = currentAccounts[0].username;
-        
-    }
+let username = ''
+let verifier_ = ''
+const csrfToken = cryptoProvider.createNewGuid()
+const state = cryptoProvider.base64Encode(
+  JSON.stringify({
+    csrfToken: csrfToken,
+    redirectTo: '/',
+  }),
+)
+const authCodeUrlRequestParams = {
+  state: state,
+  scopes: ['User.Read'],
 }
 
-function handleResponse(response) {
-
-    /**
-     * To see the full list of response object properties, visit:
-     * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#response
-     */
-
-    if (response !== null) {
-        username = response.account.username;
-        
-    } else {
-        selectAccount();
-    }
+const authCodeRequestParams = {
+  scopes: ['User.Read'],
 }
 
-function signIn() {
-
-    /**
-     * You can pass a custom request object below. This will override the initial configuration. For more information, visit:
-     * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#request
-     */
-
-    myMSALObj.loginPopup(loginRequest)
-        .then(handleResponse)
-        .catch(error => {
-            console.error(error);
-        });
+export function selectAccount() {
+  /**
+   * See here for more info on account retrieval:
+   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
+   */
+  //   const currentAccounts = myMSALObj.getAllAccounts()
+  //   if (currentAccounts.length === 0) {
+  //     return
+  //   } else if (currentAccounts.length > 1) {
+  //     // Add choose account code here
+  //     console.warn('Multiple accounts detected.')
+  //   } else if (currentAccounts.length === 1) {
+  //     username = currentAccounts[0].username
+  //   }
 }
 
-function signOut() {
+export function handleResponse(response) {
+  /**
+   * To see the full list of response object properties, visit:
+   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#response
+   */
 
-    /**
-     * You can pass a custom request object below. This will override the initial configuration. For more information, visit:
-     * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#request
-     */
+  if (response !== null) {
+    username = response.account.username
+  } else {
+    selectAccount()
+  }
+}
+export async function redirect(req) {
+  console.log('redirect')
+  const tokenRequest = {
+    code: req.query.code,
+    codeVerifier: verifier_,
+    redirectUri: 'https://hamid.bettermode.ngrok.io/microsoft/redirect',
+    scopes: ['User.Read'],
+  }
+  try {
+    const tokenResponse = await msalInstance.acquireTokenByCode(tokenRequest)
+    console.log(tokenResponse.accessToken)
+    const response = await callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken)
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+  }
 
-    const logoutRequest = {
-        account: myMSALObj.getAccountByUsername(username),
-        postLogoutRedirectUri: msalConfig.auth.redirectUri,
-        mainWindowRedirectUri: msalConfig.auth.redirectUri
-    };
-
-    myMSALObj.logoutPopup(logoutRequest);
 }
 
-function getTokenPopup(request) {
+export async function signIn() {
+  /**
+   * You can pass a custom request object below. This will override the initial configuration. For more information, visit:
+   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#request
+   */
+  console.log('sign in')
 
-    /**
-     * See here for more info on account retrieval: 
-     * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
-     */
-    request.account = myMSALObj.getAccountByUsername(username);
-    
-    return myMSALObj.acquireTokenSilent(request)
-        .catch(error => {
-            console.warn("silent token acquisition fails. acquiring token using popup");
-            if (error instanceof msal.InteractionRequiredAuthError) {
-                // fallback to interaction when silent call fails
-                return myMSALObj.acquireTokenPopup(request)
-                    .then(tokenResponse => {
-                        console.log(tokenResponse);
-                        return tokenResponse;
-                    }).catch(error => {
-                        console.error(error);
-                    });
-            } else {
-                console.warn(error);   
-            }
-    });
+  const { verifier, challenge } = await cryptoProvider.generatePkceCodes()
+  const pkceCodes = { challengeMethod: 'S256', verifier: verifier, challenge: challenge }
+  verifier_ = verifier
+  const authCodeUrlRequest = {
+    redirectUri: 'https://hamid.bettermode.ngrok.io/microsoft/redirect',
+    // recommended for confidential clients
+    codeChallenge: pkceCodes.challenge,
+    codeChallengeMethod: pkceCodes.challengeMethod,
+    ...authCodeUrlRequestParams,
+  }
+  const authCodeRequest = {
+    redirectUri: '',
+    code: '',
+    ...authCodeRequestParams,
+  }
+
+  const authCodeUrl = await msalInstance.getAuthCodeUrl(authCodeUrlRequest)
+  console.log(authCodeUrl)
+
+  return authCodeUrl
+
+  //   myMSALObj
+  //     .loginPopup(loginRequest)
+  //     .then(handleResponse)
+  //     .catch(error => {
+  //       console.error(error)
+  //     })
 }
 
+export function signOut() {
+  /**
+   * You can pass a custom request object below. This will override the initial configuration. For more information, visit:
+   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#request
+   */
+  //   const logoutRequest = {
+  //     account: myMSALObj.getAccountByUsername(username),
+  //     postLogoutRedirectUri: msalConfig.auth.redirectUri,
+  //     mainWindowRedirectUri: msalConfig.auth.redirectUri,
+  //   }
+  //   myMSALObj.logoutPopup(logoutRequest)
+}
 
-
-
-
+export function getTokenPopup(request) {
+  /**
+   * See here for more info on account retrieval:
+   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
+   */
+  //   request.account = myMSALObj.getAccountByUsername(username)
+  //   return myMSALObj.acquireTokenSilent(request).catch(error => {
+  //     console.warn('silent token acquisition fails. acquiring token using popup')
+  //     if (error instanceof msal.InteractionRequiredAuthError) {
+  //       // fallback to interaction when silent call fails
+  //       return myMSALObj
+  //         .acquireTokenPopup(request)
+  //         .then(tokenResponse => {
+  //           console.log(tokenResponse)
+  //           return tokenResponse
+  //         })
+  //         .catch(error => {
+  //           console.error(error)
+  //         })
+  //     } else {
+  //       console.warn(error)
+  //     }
+  //   })
+}

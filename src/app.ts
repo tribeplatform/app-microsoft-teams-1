@@ -75,7 +75,7 @@ class App {
     this.app.use(cookieParser())
     this.app.use(
       session({
-        secret: SESSION_SECRET,
+        secret: 'secret',
         resave: false,
         saveUninitialized: false,
         store: MongoStore.create({
