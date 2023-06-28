@@ -16,8 +16,8 @@ import {
   UseBefore,
 } from 'routing-controllers'
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi'
-import { signIn, redirect } from '../logics/microsoft/authPopup'
-
+import { signIn, redirect, signOut, getResource } from '../logics/microsoft/authPopup'
+let logoutUrl = null
 @Controller('/bettermode/oauth')
 export class BettermodeOAuthController {
   readonly logger = globalLogger.setContext(BettermodeOAuthController.name)
@@ -47,29 +47,54 @@ export class BettermodeOAuthController {
 
     return getBettermodeOauthTokens(input)
   }
-
-
 }
+
+
+
+
+
+
+
+
 @Controller('/microsoft')
 export class AppController {
   @Get()
   async redirect(@Res() res: Response): Promise<Response> {
     try {
-      const redirectUrl = await signIn();
-      res.redirect(302, redirectUrl);
-      return res;
+      const redirectUrl = await signIn()
+      res.redirect(302, redirectUrl)
+      return res
     } catch (error) {
       // Handle any errors that occur during redirection
-      console.error(error);
+      console.error(error)
     }
   }
   @Get('/redirect')
   @HttpCode(200)
   @Redirect('/')
   async token(@Req() req: Response): Promise<void> {
-    const token = await redirect(req);
+    const token = await redirect(req)
+
+    return
+  }
+
+  @Get('/logout')
+  async logout(@Res() res: Response,@Req() req: Response): Promise<Response> {
+    const logoutUrl = signOut()
+   
+    res.redirect(302, logoutUrl)
+    console.log(logoutUrl)
+    req.destroy()
+    return res
+ 
+  }
+
+  @Get('/resource')
+  @HttpCode(200)
+  async resource(@Req() req: Response): Promise<void> {
+    const token = await getResource()
     
     return
   }
-}
 
+}

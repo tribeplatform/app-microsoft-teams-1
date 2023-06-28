@@ -1,4 +1,5 @@
 import {
+  
   CREDENTIALS,
   DATABASE_URL,
   LOG_ACCESS,
@@ -21,6 +22,7 @@ import session from 'express-session'
 import helmet from 'helmet'
 import hpp from 'hpp'
 import morgan from 'morgan'
+import passport from 'passport'
 import { getMetadataArgsStorage, useExpressServer } from 'routing-controllers'
 import { routingControllersToSpec } from 'routing-controllers-openapi'
 import swaggerUi from 'swagger-ui-express'
@@ -85,6 +87,8 @@ class App {
         }),
       }),
     )
+    this.app.use(passport.initialize())
+    this.app.use(passport.session())
   }
 
   private initializeRoutes(controllers: Function[]) {

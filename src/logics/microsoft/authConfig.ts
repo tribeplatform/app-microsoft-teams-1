@@ -4,18 +4,20 @@
  * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/configuration.md
  */
 import * as msal from '@azure/msal-browser'
-
+const testlogin = 'loggedin'
 export const msalConfig = {
   auth: {
     // 'Application (client) ID' of app registration in Azure portal - this value is a GUID
-    clientId: '5ba4291c-c5c5-44cd-8e7d-7073250eb41f',
+    clientId: '568aaefe-81b7-487a-b19a-21c4a96498dc',
     // Full directory URL, in the form of https://login.microsoftonline.com/<tenant-id>
-    authority: 'https://login.microsoftonline.com/consumers',
-    clientSecret: 'JAl8Q~RpCwL6Ee4A9P_B-AMmUZHdhCIN9f6N2bs~',
+    authority: 'https://login.microsoftonline.com/common',
+    clientSecret: 'PT48Q~Wby_OkU~LjWpaVMDKoETqzy54lBa0-ec_e',
     // Full redirect URL, in form of http://localhost:3000
     redirectUri: 'https://hamid.bettermode.ngrok.io/',
     
+    
   },
+  cache: {},
   system: {
     loggerOptions: {
       loggerCallback: (level, message, containsPii) => {
@@ -48,7 +50,7 @@ export const msalConfig = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 export const loginRequest = {
-  scopes: ['User.Read'],
+  scopes: ['User.Read', 'Chat.ReadWrite', 'Chat.Create'],
 }
 
 /**
@@ -56,6 +58,6 @@ export const loginRequest = {
  * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/resources-and-scopes.md
  */
 export const tokenRequest = {
-  scopes: ['User.Read', 'Mail.Read'],
+  scopes: ['User.Read', 'Mail.Read','Chat.ReadWrite', 'Chat.Create'],
   forceRefresh: false, // Set this to "true" to skip a cached token and go to the server to get a new token
 }

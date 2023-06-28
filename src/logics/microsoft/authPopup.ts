@@ -2,14 +2,15 @@
 // configuration parameters are located at authConfig.js
 import * as msal from '@azure/msal-node'
 import { graphConfig } from './graphConfig'
-import { callMSGraph } from './callGraph'
+import { callMSGraph, createChat } from './callGraph'
 import { msalConfig, loginRequest, tokenRequest } from './authConfig'
 import { Redirect } from 'routing-controllers'
-var express = require('express')
+import { log } from 'console'
+let express = require('express')
 const msalInstance = new msal.ConfidentialClientApplication(msalConfig)
 const cryptoProvider = new msal.CryptoProvider()
-
-let username = ''
+export let loggedin = false
+let homeAccountId = null
 let verifier_ = ''
 const csrfToken = cryptoProvider.createNewGuid()
 const state = cryptoProvider.base64Encode(
@@ -20,58 +21,67 @@ const state = cryptoProvider.base64Encode(
 )
 const authCodeUrlRequestParams = {
   state: state,
-  scopes: ['User.Read'],
+  ...loginRequest,
 }
 
-const authCodeRequestParams = {
-  scopes: ['User.Read'],
-}
 
-export function selectAccount() {
-  /**
-   * See here for more info on account retrieval:
-   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
-   */
-  //   const currentAccounts = myMSALObj.getAllAccounts()
-  //   if (currentAccounts.length === 0) {
-  //     return
-  //   } else if (currentAccounts.length > 1) {
-  //     // Add choose account code here
-  //     console.warn('Multiple accounts detected.')
-  //   } else if (currentAccounts.length === 1) {
-  //     username = currentAccounts[0].username
-  //   }
-}
 
-export function handleResponse(response) {
-  /**
-   * To see the full list of response object properties, visit:
-   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/request-response-object.md#response
-   */
 
-  if (response !== null) {
-    username = response.account.username
-  } else {
-    selectAccount()
-  }
-}
 export async function redirect(req) {
   console.log('redirect')
   const tokenRequest = {
     code: req.query.code,
     codeVerifier: verifier_,
     redirectUri: 'https://hamid.bettermode.ngrok.io/microsoft/redirect',
-    scopes: ['User.Read'],
+    ...loginRequest,
   }
   try {
+    // console.log(await msalInstance.getTokenCache().getAllAccounts())
+
     const tokenResponse = await msalInstance.acquireTokenByCode(tokenRequest)
+    homeAccountId = tokenResponse.account.homeAccountId
     console.log(tokenResponse.accessToken)
-    const response = await callMSGraph(graphConfig.graphMeEndpoint, tokenResponse.accessToken)
+    const response = await callMSGraph(
+      graphConfig.graphMeEndpoint,
+      tokenResponse.accessToken,
+    )
+    // homeAccountId = response.account.homeAccountId;
+    console.log(homeAccountId + ' account id')
     console.log(response)
+    const userId0 = response.id
+    const userId1 = '62d295b3b8ff498d'
+    const endpoint = 'https://graph.microsoft.com/v1.0/chats'
+    loggedin = true
+
+    const chat = await createChat( endpoint, tokenResponse.accessToken, userId0, userId1) 
+    console.log(chat)
   } catch (error) {
     console.log(error)
   }
+}
+export async function getResource() {
+  // Find account using homeAccountId or localAccountId built after receiving auth code token response
+  const msalTokenCache = msalInstance.getTokenCache()
+  console.log(msalTokenCache)
+  const account = await msalTokenCache.getAccountByHomeId("00000000-0000-0000-62d2-95b3b8ff498d.9188040d-6c67-4c5b-b112-36a304b66dad")
+  console.log(account) // alternativley: await msalTokenCache.getAccountByLocalId(localAccountId) if using localAccountId
 
+  // Build silent request
+  const silentRequest = {
+    account: account,
+    scopes: ['user.read'],
+  }
+  // Acquire Token Silently to be used in Resource API calll
+  msalInstance
+    .acquireTokenSilent(silentRequest)
+    .then(response => {
+      // Handle successful resource API response
+      console.log(response)
+    })
+    .catch(error => {
+      // Handle resource API request error
+      console.log(error)
+    })
 }
 
 export async function signIn() {
@@ -91,11 +101,7 @@ export async function signIn() {
     codeChallengeMethod: pkceCodes.challengeMethod,
     ...authCodeUrlRequestParams,
   }
-  const authCodeRequest = {
-    redirectUri: '',
-    code: '',
-    ...authCodeRequestParams,
-  }
+
 
   const authCodeUrl = await msalInstance.getAuthCodeUrl(authCodeUrlRequest)
   console.log(authCodeUrl)
@@ -121,29 +127,12 @@ export function signOut() {
   //     mainWindowRedirectUri: msalConfig.auth.redirectUri,
   //   }
   //   myMSALObj.logoutPopup(logoutRequest)
+  
+  const logoutUri = `${msalConfig.auth.authority}/oauth2/v2.0/logout?post_logout_redirect_uri=${msalConfig.auth.redirectUri}`;
+  console.log(logoutUri)
+  loggedin = false
+  return logoutUri
+  
 }
 
-export function getTokenPopup(request) {
-  /**
-   * See here for more info on account retrieval:
-   * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
-   */
-  //   request.account = myMSALObj.getAccountByUsername(username)
-  //   return myMSALObj.acquireTokenSilent(request).catch(error => {
-  //     console.warn('silent token acquisition fails. acquiring token using popup')
-  //     if (error instanceof msal.InteractionRequiredAuthError) {
-  //       // fallback to interaction when silent call fails
-  //       return myMSALObj
-  //         .acquireTokenPopup(request)
-  //         .then(tokenResponse => {
-  //           console.log(tokenResponse)
-  //           return tokenResponse
-  //         })
-  //         .catch(error => {
-  //           console.error(error)
-  //         })
-  //     } else {
-  //       console.warn(error)
-  //     }
-  //   })
-}
+

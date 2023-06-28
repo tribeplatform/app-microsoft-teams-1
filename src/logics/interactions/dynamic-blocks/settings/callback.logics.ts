@@ -1,5 +1,5 @@
 import { InteractionType, WebhookStatus, WebhookType } from '@enums'
-import { InteractionInput, InteractionWebhookResponse } from '@interfaces'
+import { InteractionInput, InteractionWebhook, InteractionWebhookResponse, RedirectInteractionProps } from '@interfaces'
 import { Network, NetworkSettings, ToastStatus } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 
@@ -8,6 +8,7 @@ import { getInteractionNotSupportedError } from '../../../error.logics'
 import { globalLogger } from '@utils'
 import { SettingsBlockCallback } from './constants'
 import { getNetworkSettingsModalSlate, getNetworkSettingsSlate } from './slate.logics'
+import { getNetworkClient } from '@clients'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -39,7 +40,48 @@ const getSaveCallbackResponse = async (options: {
     },
   }
 }
-
+const getRedirectCallbackResponseMicrosoft = async ({
+  props,
+  interactionId,
+}: {
+  props: RedirectInteractionProps
+  interactionId?: string
+}): Promise<InteractionWebhookResponse> => ({
+  type: WebhookType.Interaction,
+  status: WebhookStatus.Succeeded,
+  data: {
+    interactions: [
+      {
+        id: interactionId || 'new-interaction-id',
+        type: InteractionType.Redirect,
+        props,
+      },
+    ],
+  },
+})
+const getAuthRedirectCallbackResponse = async (
+  webhook: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  logger.debug('getAuthRedirectCallbackResponse called', { webhook })
+  const {
+    networkId,
+    data: { actorId },
+  } = webhook
+  const gqlClient = await getNetworkClient(networkId)
+  const network = await gqlClient.query({
+    name: 'network',
+    args: 'basic',
+  })
+  return getRedirectCallbackResponseMicrosoft({
+    props: {
+      url: await getConnectHubspotUrl({
+        network,
+        actorId,
+      }),
+      external: false,
+    },
+  })
+}
 const getModalSaveCallbackResponse = async (options: {
   network: Network
   data: InteractionInput<NetworkSettings>
@@ -150,6 +192,8 @@ export const getCallbackResponse = async (options: {
   } = options
 
   switch (callbackId) {
+    case SettingsBlockCallback.AuthRedirect:
+      return getAuthRedirectCallbackResponse(options)
     case SettingsBlockCallback.Save:
       return getSaveCallbackResponse(options)
     case SettingsBlockCallback.ModalSave:
@@ -164,3 +208,7 @@ export const getCallbackResponse = async (options: {
       return getInteractionNotSupportedError('callbackId', callbackId)
   }
 }
+function getConnectHubspotUrl(arg0: { network: import("@tribeplatform/gql-client/types").Network; actorId: string }): string | PromiseLike<string> {
+  throw new Error('Function not implemented.')
+}
+
