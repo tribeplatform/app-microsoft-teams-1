@@ -1,0 +1,12 @@
+<script>
+  window.BM.on('ready', function() {
+    window.BM.alert({
+      title: 'You are amazing!',
+      description: 'This is to let you know that you are amazing.',
+      proceedLabel: 'I know',
+      danger: false
+    }).then(function() {
+        console.log('Alert is now closed.')
+    })
+  })
+</script>
