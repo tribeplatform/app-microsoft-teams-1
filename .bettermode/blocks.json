@@ -2,7 +2,7 @@
   "defaults": [
     {
       "key": "settings",
-      "interactionUrl": "https://748d07c3705c.ngrok.app/webhook/interaction",
+      "interactionUrl": "https://hamid.bettermode.ngrok.io/webhook/interaction",
       "contexts": null
     }
   ],

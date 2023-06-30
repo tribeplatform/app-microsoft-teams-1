@@ -1,6 +1,6 @@
 import { InteractionType, WebhookStatus, WebhookType } from '@enums'
 import { InteractionInput, InteractionWebhook, InteractionWebhookResponse, RedirectInteractionProps } from '@interfaces'
-import { Network, NetworkSettings, ToastStatus } from '@prisma/client'
+import { Network, NetworkSettings } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 
 import { getInteractionNotSupportedError } from '../../../error.logics'
@@ -9,7 +9,9 @@ import { globalLogger } from '@utils'
 import { SettingsBlockCallback } from './constants'
 import { getNetworkSettingsModalSlate, getNetworkSettingsSlate } from './slate.logics'
 import { getNetworkClient } from '@clients'
-
+import { getConnectMicrosoftUrl } from '@/logics/oauth.logic'
+import { ToastStatus } from '@enums'
+import { getDisconnectedSettingsResponse } from './helper'
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
 const getSaveCallbackResponse = async (options: {
@@ -59,28 +61,56 @@ const getRedirectCallbackResponseMicrosoft = async ({
     ],
   },
 })
-const getAuthRedirectCallbackResponse = async (
-  webhook: InteractionWebhook,
-): Promise<InteractionWebhookResponse> => {
-  logger.debug('getAuthRedirectCallbackResponse called', { webhook })
+const getAuthRedirectCallbackResponse = async( options: {
+  networkId: string
+  data: InteractionInput<NetworkSettings>
+}): Promise<InteractionWebhookResponse> => {
+  logger.debug('getAuthRedirectCallbackResponse called', { options })
   const {
     networkId,
     data: { actorId },
-  } = webhook
+  } = options
+  console.log('networkId2', networkId)
   const gqlClient = await getNetworkClient(networkId)
-  const network = await gqlClient.query({
+  console.log('gp', !!gqlClient.query, !!gqlClient.graphqlUrl)
+  let network;
+  try{
+  network = await gqlClient.query({
     name: 'network',
     args: 'basic',
   })
+} catch(e){
+  console.log(e)
+}
+  console.log('we are here!', network)
   return getRedirectCallbackResponseMicrosoft({
     props: {
-      url: await getConnectHubspotUrl({
+      url: await getConnectMicrosoftUrl({
         network,
         actorId,
       }),
       external: false,
     },
   })
+}
+const getAuthRevokeCallbackResponse = async (options: {
+  networkId: string
+  data: InteractionInput<NetworkSettings>
+}): Promise<InteractionWebhookResponse> => {
+  logger.debug('getAuthRedirectCallbackResponse called', )
+  logger.debug('handleUninstalledWebhook called',)
+  const {
+    networkId,
+    data: { interactionId },
+  } = options
+  try {
+    await NetworkRepository.delete(networkId)
+  } catch (error) {
+    logger.error(error)
+    // return getServiceUnavailableError(webhook)
+  }
+
+  return getDisconnectedSettingsResponse({ interactionId })
 }
 const getModalSaveCallbackResponse = async (options: {
   network: Network
@@ -151,7 +181,7 @@ const getOpenToastCallbackResponse = async (options: {
         id: 'open-toast',
         type: InteractionType.OpenToast,
         props: {
-          status: options.network.settings?.toastStatus || ToastStatus.WARNING,
+          status: ToastStatus.Info,
           title:
             options.network.settings?.toastMessage || 'Please set your toast message!',
           description: 'Description goes here',
@@ -173,16 +203,18 @@ const getRedirectCallbackResponse = async (options: {
         id: 'new-interaction-id',
         type: InteractionType.Redirect,
         props: {
-          url: options.network.settings?.redirectionUrl || 'https://bettermode.com',
-          external: options.network.settings?.externalRedirect,
+          url: 'https://bettermode.com',
+          external: true,
         },
       },
     ],
   },
 })
 
+
+
 export const getCallbackResponse = async (options: {
-  network: Network
+  networkId: string
   data: InteractionInput<NetworkSettings>
 }): Promise<InteractionWebhookResponse> => {
   logger.debug('getCallbackResponse called', { options })
@@ -192,23 +224,23 @@ export const getCallbackResponse = async (options: {
   } = options
 
   switch (callbackId) {
+    // case SettingsBlockCallback.AuthRedirect:
+    //   return getAuthRedirectCallbackResponse(options)
+    case SettingsBlockCallback.AuthVoke:
+      return getAuthRevokeCallbackResponse(options)
+    // case SettingsBlockCallback.Save:
+    //   return getSaveCallbackResponse(options)
+    // case SettingsBlockCallback.ModalSave:
+    //   return getModalSaveCallbackResponse(options)
+    // case SettingsBlockCallback.OpenModal:
+    //   return getOpenModalCallbackResponse(options)
+    // case SettingsBlockCallback.OpenToast:
+    //   return getOpenToastCallbackResponse(options)
     case SettingsBlockCallback.AuthRedirect:
+      // return getRedirectCallbackResponse(options)
       return getAuthRedirectCallbackResponse(options)
-    case SettingsBlockCallback.Save:
-      return getSaveCallbackResponse(options)
-    case SettingsBlockCallback.ModalSave:
-      return getModalSaveCallbackResponse(options)
-    case SettingsBlockCallback.OpenModal:
-      return getOpenModalCallbackResponse(options)
-    case SettingsBlockCallback.OpenToast:
-      return getOpenToastCallbackResponse(options)
-    case SettingsBlockCallback.Redirect:
-      return getRedirectCallbackResponse(options)
     default:
       return getInteractionNotSupportedError('callbackId', callbackId)
   }
-}
-function getConnectHubspotUrl(arg0: { network: import("@tribeplatform/gql-client/types").Network; actorId: string }): string | PromiseLike<string> {
-  throw new Error('Function not implemented.')
 }
 

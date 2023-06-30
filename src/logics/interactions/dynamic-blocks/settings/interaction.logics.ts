@@ -1,4 +1,4 @@
-import { InteractionType, WebhookStatus, WebhookType } from '@enums'
+import { InteractionType, ToastStatus, WebhookStatus, WebhookType } from '@enums'
 import {
   InteractionInput,
   InteractionWebhook,
@@ -13,6 +13,7 @@ import { getInteractionNotSupportedError } from '../../../error.logics'
 import { globalLogger } from '@utils'
 import { getCallbackResponse } from './callback.logics'
 import { getNetworkSettingsSlate } from './slate.logics'
+import { getDisconnectedSettingsResponse } from './helper'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -27,12 +28,17 @@ const getNetworkSettingsInteractionResponse = async (options: {
     data: { interactionId, callbackId },
   } = options
 
-  const network = await NetworkRepository.findUniqueOrThrow(networkId)
-
+  const network = await NetworkRepository.findUnique(networkId)
+  console.log(network)
+  
   if (callbackId) {
-    return getCallbackResponse({ network, data: options.data })
+    return getCallbackResponse({ networkId, data: options.data })
   }
-
+  if (!network) {
+    return getDisconnectedSettingsResponse({
+      interactionId,
+    })
+  }
   return {
     type: WebhookType.Interaction,
     status: WebhookStatus.Succeeded,

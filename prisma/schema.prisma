@@ -16,7 +16,13 @@ model Network {
   updatedAt DateTime @updatedAt
   
   networkId String @unique
-  domain String @unique
+  memberId String 
+  userId String
+  token String
+  refresh String
+  domain String
+  microsoftId String
+  
   name String
   graphqlUrl String
 

@@ -5,4 +5,5 @@ export enum SettingsBlockCallback {
   OpenToast = 'open-toast',
   Redirect = 'redirect',
   AuthRedirect = 'auth-redirect',
+  AuthVoke= 'auth-voke',
 }

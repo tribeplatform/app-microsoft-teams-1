@@ -16,8 +16,6 @@ class MicrosofTeamstStrategy extends MicrosoftPassportStrategy {
     }
   
     public authenticate(req: Request, options) {
-      this._oauth2._clientId = MICROSOFT_CLIENT_ID
-      this._oauth2._clientSecret = MICROSOFT_CLIENT_SECRET
       return super.authenticate(req, { ...options, state: req.query.jwt })
     }
   }
@@ -33,8 +31,8 @@ class MicrosofTeamstStrategy extends MicrosoftPassportStrategy {
   passport.use(
     new MicrosofTeamstStrategy(
       {
-        clientID: 'unknown',
-        clientSecret: 'unknown',
+        clientID: MICROSOFT_CLIENT_ID,
+        clientSecret: MICROSOFT_CLIENT_SECRET,
         scope: OAUTH_SCOPES,
         callbackURL: `${SERVER_URL}/oauth/redirect`,
         passReqToCallback: true,
@@ -97,7 +95,7 @@ export const consumerExtractorMiddleware = async (req: Request, res: Response, n
     (req.query.jwt || req.query.state) as string,
   )
   // const community = await NetworkSettingsRepository.findUniqueOrThrow(state.networkId)
-
+  console.log(state)
   req.state = state
   // req.consumerKey = community.newConsumerKey
   // req.consumerSecret = community.newConsumerSecret

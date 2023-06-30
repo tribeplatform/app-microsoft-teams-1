@@ -14,7 +14,7 @@ export const getNetworkSettingsSlate = async (
   logger.debug('getNetworkSettingsSlate called', { settings })
 
   const liquid = await readFile(
-    join(__dirname, 'slates', 'network-settings.slate.liquid'),
+    join(__dirname, 'slates', 'connected.slate.liquid'),
     'utf8',
   )
   const convertor = new LiquidConvertor(liquid)
