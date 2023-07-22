@@ -16,7 +16,7 @@ import {
   UseBefore,
 } from 'routing-controllers'
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi'
-import { signIn, redirect, signOut, getResource } from '../logics/microsoft/authPopup'
+import { getResource, redirect, signIn, signOut } from '../logics/microsoft/authPopup'
 let logoutUrl = null
 @Controller('/bettermode/oauth')
 export class BettermodeOAuthController {

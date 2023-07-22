@@ -33,16 +33,18 @@ export interface RedirectInteractionProps {
 }
 
 export interface InteractionInput<T = { [key: string]: unknown }> {
-  actorId: string
-  appId: string
-  interactionId: string
-  preview?: boolean
-  dynamicBlockKey?: string
-  shortcutKey?: string
-  callbackId?: string
-  inputs?: T
-  props?: unknown
+  actorId: string;
+  appId: string;
+  interactionId: string;
+  preview?: boolean;
+  dynamicBlockKey?: string;
+  shortcutKey?: string;
+  callbackId?: string;
+  inputs?: T 
+  props?: unknown;
 }
+
+
 
 export interface BaseInteraction {
   id: string

@@ -1,11 +1,12 @@
 import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 
 import { SettingsBlockCallback } from '../constants'
-
+import { title } from 'process'
 export const getAuthSettingsBlocks = (options: {
   id: string
   description: string
   action: string
+  title?: string
   actionVariant: 'outline' | 'primary' | 'danger'
   actionCallbackId: SettingsBlockCallback
   secondaryAction?: string
@@ -13,6 +14,7 @@ export const getAuthSettingsBlocks = (options: {
 }): RawBlockDto[] => {
   const {
     id,
+    title,
     description,
     action,
     actionVariant,
@@ -29,7 +31,7 @@ export const getAuthSettingsBlocks = (options: {
     {
       id: `${id}.header`,
       name: 'Card.Header',
-      props: { title: 'Your authorization' },
+      props: { title: title || 'Your authorization' },
     },
     {
       id: `${id}.content`,

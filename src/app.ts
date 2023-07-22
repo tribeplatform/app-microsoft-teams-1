@@ -1,12 +1,10 @@
 import {
-  
   CREDENTIALS,
   DATABASE_URL,
   LOG_ACCESS,
   NODE_ENV,
   ORIGIN,
-  PORT,
-  SESSION_SECRET,
+  PORT
 } from '@config'
 import { Request } from '@interfaces'
 import { errorMiddleware } from '@middlewares'

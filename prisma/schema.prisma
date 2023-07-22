@@ -20,53 +20,27 @@ model Network {
   userId String
   token String
   refresh String
-  domain String
-  microsoftId String
-  
+  microsoftId String 
   name String
-  graphqlUrl String
 
-  settings NetworkSettings?
 }
 
-type NetworkSettings {
-  toastMessage String?
-  toastStatus ToastStatus?
-  redirectionUrl String
-  externalRedirect Boolean @default(false)
-}
 
-enum ToastStatus {
-  ERROR
-  WARNING
-  SUCCESS
-  INFO
-  NEUTRAL
-}
-
-model Member {
+model Channel {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   createdAt  DateTime   @default(now())
   updatedAt DateTime @updatedAt
   
-  networkId String
-  memberId String @unique
-  email String
-  name String
-  refreshToken String
+  networkId String 
+  channelId String
+  teamId String
+  spaceIds String[]
+
 }
 
-model MemberPostSettings {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt  DateTime   @default(now())
-  updatedAt DateTime @updatedAt
+
   
-  networkId String
-  memberId String
-  postId String
 
-  markedAsFavorite Boolean @default(false)
 
-  @@unique([memberId, postId], name: "memberPost")
-  @@index([memberId, markedAsFavorite, createdAt(sort: Desc)])
-}
+
+

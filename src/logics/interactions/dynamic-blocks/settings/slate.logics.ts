@@ -36,16 +36,15 @@ export const getNetworkSettingsSlate = async (
 }
 
 export const getNetworkSettingsModalSlate = async (
-  settings: NetworkSettings,
+  networkId: string
 ): Promise<SlateDto> => {
-  logger.debug('getNetworkSettingsModalSlate called', { settings })
+  logger.debug('getNetworkSettingsModalSlate called', { networkId })
 
   const liquid = await readFile(
     join(__dirname, 'slates', 'network-settings-modal.slate.liquid'),
     'utf8',
   )
   const convertor = new LiquidConvertor(liquid)
-  const cleanSettings: NetworkSettings = { toastStatus: ToastStatus.INFO, ...settings }
   const slate = await convertor.toSlate({
     variables: {
       toastStatuses: JSON.stringify([
@@ -55,7 +54,6 @@ export const getNetworkSettingsModalSlate = async (
         { value: ToastStatus.INFO, text: 'Info' },
         { value: ToastStatus.NEUTRAL, text: 'Neutral' },
       ]),
-      jsonSettings: JSON.stringify(cleanSettings),
     },
   })
   return slate

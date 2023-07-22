@@ -6,7 +6,13 @@ import passport from 'passport'
 import { Strategy as MicrosoftPassportStrategy } from 'passport-microsoft'
 
 const OAUTH_SCOPES = [
-    'user.read',
+  'user.Read',
+  'openid',
+  'offline_access',
+  'Team.ReadBasic.All',
+  "Chat.ReadBasic",
+  "ChannelSettings.ReadWrite.All",
+  "Group.ReadWrite.All"
 ]
 class MicrosofTeamstStrategy extends MicrosoftPassportStrategy {
     _oauth2: any
@@ -55,7 +61,7 @@ class MicrosofTeamstStrategy extends MicrosoftPassportStrategy {
 //     // Standard OAuth2 
 //     clientID: '568aaefe-81b7-487a-b19a-21c4a96498dc',
 //     clientSecret: 'PT48Q~Wby_OkU~LjWpaVMDKoETqzy54lBa0-ec_e',
-//     callbackURL: "https://hamid.bettermode.ngrok.io/oauth/redirect",
+//     callbackURL: "oauth/redirect",
 //     scope: ['user.read'],
   
 //     cashe: {},

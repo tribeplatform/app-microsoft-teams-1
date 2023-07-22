@@ -20,7 +20,7 @@ export const getNotConnectedSettingsSlate = (): RawSlateDto => {
         actionCallbackId: SettingsBlockCallback.AuthRedirect,
         actionVariant: 'primary',
         description:
-          `You need to authenticate Hubspot to activate this integration.` +
+          `You need to authenticate micorsoft to activate this integration.` +
           ` Please take a look at documentation (you can find it in the right side bar) if you need more information.`,
       }),
     ],

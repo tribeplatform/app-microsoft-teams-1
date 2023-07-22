@@ -1,56 +1,39 @@
-import { InteractionType, ToastStatus, WebhookStatus, WebhookType } from '@enums'
 import {
   InteractionInput,
   InteractionWebhook,
   InteractionWebhookResponse,
+  Webhook,
 } from '@interfaces'
-import { NetworkSettings } from '@prisma/client'
+import { Network } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 import { PermissionContext } from '@tribeplatform/gql-client/types'
-
-import { getInteractionNotSupportedError } from '../../../error.logics'
-
 import { globalLogger } from '@utils'
+import { getInteractionNotSupportedError } from '../../../error.logics'
 import { getCallbackResponse } from './callback.logics'
-import { getNetworkSettingsSlate } from './slate.logics'
-import { getDisconnectedSettingsResponse } from './helper'
+import { getConnectedSettingsResponse, getDisconnectedSettingsResponse } from './helper'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
-const getNetworkSettingsInteractionResponse = async (options: {
-  networkId: string
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => {
+const getNetworkSettingsInteractionResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   logger.debug('getNetworkSettingsInteractionResponse called', { options })
-
   const {
     networkId,
     data: { interactionId, callbackId },
   } = options
-
+  if (callbackId) {
+    return getCallbackResponse(options)
+  }
   const network = await NetworkRepository.findUnique(networkId)
   console.log(network)
-  
-  if (callbackId) {
-    return getCallbackResponse({ networkId, data: options.data })
-  }
+
   if (!network) {
     return getDisconnectedSettingsResponse({
       interactionId,
     })
   }
-  return {
-    type: WebhookType.Interaction,
-    status: WebhookStatus.Succeeded,
-    data: {
-      interactions: [
-        {
-          id: interactionId,
-          type: InteractionType.Show,
-          slate: await getNetworkSettingsSlate(network.settings),
-        },
-      ],
-    },
+
+  if (network) {
+    return getConnectedSettingsResponse(options.data, network)
   }
 }
 
@@ -63,10 +46,9 @@ export const getSettingsInteractionResponse = async (
 
   switch (context) {
     case PermissionContext.NETWORK:
-      return getNetworkSettingsInteractionResponse({
-        networkId,
-        data: data as InteractionInput<NetworkSettings>,
-      })
+      return getNetworkSettingsInteractionResponse(webhook)
+        
+      
     default:
       return getInteractionNotSupportedError('context', context)
   }

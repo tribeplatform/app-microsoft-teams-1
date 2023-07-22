@@ -1,47 +1,24 @@
 import { InteractionType, WebhookStatus, WebhookType } from '@enums'
 import { InteractionInput, InteractionWebhook, InteractionWebhookResponse, RedirectInteractionProps } from '@interfaces'
-import { Network, NetworkSettings } from '@prisma/client'
+import { Network } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 
-import { getInteractionNotSupportedError } from '../../../error.logics'
-
-import { globalLogger } from '@utils'
-import { SettingsBlockCallback } from './constants'
-import { getNetworkSettingsModalSlate, getNetworkSettingsSlate } from './slate.logics'
-import { getNetworkClient } from '@clients'
 import { getConnectMicrosoftUrl } from '@/logics/oauth.logic'
-import { ToastStatus } from '@enums'
-import { getDisconnectedSettingsResponse } from './helper'
+import { getNetworkClient } from '@clients'
+import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
+import { globalLogger } from '@utils'
+import { getInteractionNotSupportedError } from '../../../error.logics'
+import { SettingsBlockCallback } from './constants'
+import { getConnectModalResponse, getDisconnectedSettingsResponse, getOpenToastCallbackResponse } from './helper'
+import { getListOfChannels, getListOfTeams, getSpaces } from './microsoft-info.logic'
+import { getConnectModalSlate } from './slates/connect-modal.slate'
+import { connectedAddedDetails } from './slates/connected-inputAdded.slate'
+
+
+
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
-const getSaveCallbackResponse = async (options: {
-  network: Network
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => {
-  logger.debug('getNetworkSettingsInteractionCallbackResponse called', { options })
 
-  const {
-    network,
-    data: { interactionId, inputs },
-  } = options
-
-  const updatedNetwork = await NetworkRepository.update(network.networkId, {
-    settings: inputs,
-  })
-  return {
-    type: WebhookType.Interaction,
-    status: WebhookStatus.Succeeded,
-    data: {
-      interactions: [
-        {
-          id: interactionId,
-          type: InteractionType.Show,
-          slate: await getNetworkSettingsSlate(updatedNetwork.settings),
-        },
-      ],
-    },
-  }
-}
 const getRedirectCallbackResponseMicrosoft = async ({
   props,
   interactionId,
@@ -61,10 +38,7 @@ const getRedirectCallbackResponseMicrosoft = async ({
     ],
   },
 })
-const getAuthRedirectCallbackResponse = async( options: {
-  networkId: string
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => {
+const getAuthRedirectCallbackResponse = async( options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   logger.debug('getAuthRedirectCallbackResponse called', { options })
   const {
     networkId,
@@ -93,10 +67,7 @@ const getAuthRedirectCallbackResponse = async( options: {
     },
   })
 }
-const getAuthRevokeCallbackResponse = async (options: {
-  networkId: string
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => {
+const getAuthRevokeCallbackResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   logger.debug('getAuthRedirectCallbackResponse called', )
   logger.debug('handleUninstalledWebhook called',)
   const {
@@ -112,88 +83,179 @@ const getAuthRevokeCallbackResponse = async (options: {
 
   return getDisconnectedSettingsResponse({ interactionId })
 }
-const getModalSaveCallbackResponse = async (options: {
-  network: Network
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => {
-  logger.debug('getNetworkSettingsInteractionCallbackResponse called', { options })
 
-  const {
-    network,
-    data: { interactionId, inputs, dynamicBlockKey },
-  } = options
 
-  await NetworkRepository.update(network.networkId, {
-    settings: inputs,
-  })
-  return {
-    type: WebhookType.Interaction,
-    status: WebhookStatus.Succeeded,
-    data: {
-      interactions: [
-        {
-          id: interactionId,
-          type: InteractionType.Close,
-        },
-        {
-          id: 'reload',
-          type: InteractionType.Reload,
-          props: {
-            dynamicBlockKeys: [dynamicBlockKey],
-          },
-        },
-      ],
-    },
-  }
+const getOpenModalCallbackResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
+  const { networkId, data } = options;
+  // const {interactionId} = data
+  logger.debug('getConnectCallbackResponse called', { networkId })
+
+  const user = await NetworkRepository.findUnique(networkId)
+  const accessToken = user.token 
+  // const teamId = 'c8033bf0-268a-4ff2-8968-81e9b799fc82'
+  // const channels = await getListOfChannels(accessToken, teamId)
+  const spaces = await getSpaces(networkId)
+  const teams = await getListOfTeams(accessToken);
+  console.log('Spaces:', spaces)
+  console.log('teams:', teams)
+  // console.log('channels:', channels)
+
+  return getConnectModalResponse({
+    user: await NetworkRepository.findUniqueOrThrow(networkId),
+    spaces: spaces, // Pass the spaces dictionary to the 'spaces' parameter in getConnectModalResponse
+    teams: teams,
+    channels: []
+    // interactionId: interactionId
+
+  });
 }
 
-const getOpenModalCallbackResponse = async (options: {
-  network: Network
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => ({
-  type: WebhookType.Interaction,
-  status: WebhookStatus.Succeeded,
-  data: {
-    interactions: [
-      {
-        id: options.data.interactionId,
-        type: InteractionType.OpenModal,
-        slate: await getNetworkSettingsModalSlate(options.network.settings),
-        props: {
-          size: 'lg',
-          title: 'Update configs',
-          description: 'Update your configs by changing the values below',
-        },
-      },
-    ],
-  },
-})
 
-const getOpenToastCallbackResponse = async (options: {
-  network: Network
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => ({
-  type: WebhookType.Interaction,
-  status: WebhookStatus.Succeeded,
-  data: {
-    interactions: [
-      {
-        id: 'open-toast',
-        type: InteractionType.OpenToast,
-        props: {
-          status: ToastStatus.Info,
-          title:
-            options.network.settings?.toastMessage || 'Please set your toast message!',
-          description: 'Description goes here',
-        },
+
+
+
+const getFetchChannelsCallbackResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
+  const { networkId, data } = options;
+  const { teamId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+
+  // Your code here to fetch the channels for the selected team and space
+  try {
+    const user = await NetworkRepository.findUnique(networkId);
+    const accessToken = user.token;
+  
+    // Fetch the list of channels for the selected team using 'selectedTeamId' and 'accessToken'
+    // const spaces = await getSpaces
+    const channels = await getListOfChannels(accessToken, teamId as string);
+    console.log('Channels:', channels);
+
+    // Now that you have the channels, update the slate with the new items for the channels dropdown
+    const updatedModalSlate = getConnectModalSlate({
+      spaces: [],
+      teams: {},
+      channels: channels,
+      
+    });
+    console.log(JSON.stringify({
+      type: WebhookType.Interaction,
+      status: WebhookStatus.Succeeded,
+      data: {
+        interactions: [
+          {
+            id: data.interactionId,
+            type: InteractionType.Show,
+            slate: rawSlateToDto(updatedModalSlate),
+          },
+        ],
       },
-    ],
-  },
-})
+    }))
+    // Return the updated slate to the modal
+    return {
+      type: WebhookType.Interaction,
+      status: WebhookStatus.Succeeded,
+      data: {
+        interactions: [
+          {
+            id: data.interactionId,
+            type: InteractionType.Show,
+            slate: rawSlateToDto(updatedModalSlate),
+          },
+        ],
+      },
+    };
+
+  } catch (error) {
+    console.error('Error fetching channels:');
+    // Handle the error in some way, e.g., show an error toast to the user
+    return getOpenToastCallbackResponse({
+      networkId: networkId,
+      data: {
+        interactionId: data.interactionId,
+        title: 'Error',
+        description: 'Error',
+      },
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const handleSaveButtonClick = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
+  const { networkId, data } = options;
+  const { spaces, teams, channels } = data.inputs;
+  const {dynamicBlockKey} = data
+  try {
+    // Save the user's selections in the database, along with other existing fields
+    // await NetworkRepository.update(networkId, {
+    //   selectedSpace: spaces,
+    //   selectedTeam: teams,
+    //   selectedChannel: channels,
+    // });
+
+    // Get the user details from the database
+  
+    const user = await NetworkRepository.findUnique(networkId);
+
+    // Construct the updated slate with the selected details
+    const updatedSlate = connectedAddedDetails({
+      user,
+      selectedSpace: spaces as string,
+      selectedTeam: teams as string,
+      selectedChannel: channels as string,
+    });
+  
+    // Return the updated slate to show the selected details
+    return {
+      type: WebhookType.Interaction,
+      status: WebhookStatus.Succeeded,
+      data: {
+        interactions: [
+          {
+            id: data.interactionId,
+            type: InteractionType.Close,
+          },
+          {
+            id: 'data.interactionId',
+            type: InteractionType.Reload,
+            // slate: rawSlateToDto(updatedSlate),
+            props: {
+              dynamicBlockKeys: [dynamicBlockKey]
+            }
+          },
+        ],
+      },
+    };
+
+  } catch (error) {
+    console.error('Error saving data:', error);
+    // Handle the error in some way, e.g., show an error toast to the user
+    return getOpenToastCallbackResponse({
+      networkId: networkId,
+      data: {
+        interactionId: data.interactionId,
+        title: 'Error',
+        description: 'Error saving data',
+      },
+    });
+  }
+};
+
+
 
 const getRedirectCallbackResponse = async (options: {
   network: Network
-  data: InteractionInput<NetworkSettings>
+  data: InteractionInput<Network>
 }): Promise<InteractionWebhookResponse> => ({
   type: WebhookType.Interaction,
   status: WebhookStatus.Succeeded,
@@ -213,29 +275,28 @@ const getRedirectCallbackResponse = async (options: {
 
 
 
-export const getCallbackResponse = async (options: {
-  networkId: string
-  data: InteractionInput<NetworkSettings>
-}): Promise<InteractionWebhookResponse> => {
+export const getCallbackResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   logger.debug('getCallbackResponse called', { options })
 
   const {
-    data: { callbackId },
-  } = options
+    networkId,
+    data: { callbackId, interactionId, inputs },
+  } = options;
+  // const formData = inputs; // Retrieve 'formData' from 'inputs'
 
+  // if (callbackId === 'modal_submit') {
+  //   return handleModalSubmit(networkId, formData);
+  // }
   switch (callbackId) {
-    // case SettingsBlockCallback.AuthRedirect:
-    //   return getAuthRedirectCallbackResponse(options)
+
     case SettingsBlockCallback.AuthVoke:
       return getAuthRevokeCallbackResponse(options)
-    // case SettingsBlockCallback.Save:
-    //   return getSaveCallbackResponse(options)
-    // case SettingsBlockCallback.ModalSave:
-    //   return getModalSaveCallbackResponse(options)
-    // case SettingsBlockCallback.OpenModal:
-    //   return getOpenModalCallbackResponse(options)
-    // case SettingsBlockCallback.OpenToast:
-    //   return getOpenToastCallbackResponse(options)
+    case SettingsBlockCallback.OpenModal:
+        return getOpenModalCallbackResponse(options)
+      case SettingsBlockCallback.SaveModal:
+        return handleSaveButtonClick(options)
+      case SettingsBlockCallback.FetchChannels: // Handle the "fetch_channels" callback ID
+      return getFetchChannelsCallbackResponse(options);   
     case SettingsBlockCallback.AuthRedirect:
       // return getRedirectCallbackResponse(options)
       return getAuthRedirectCallbackResponse(options)

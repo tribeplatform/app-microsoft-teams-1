@@ -19,12 +19,10 @@ export const connectToMicrosoft = async (options: {
   await NetworkRepository.upsert(networkId, {
       memberId: actorId,
       userId: String(user_id),
-      refresh: '',
+      refresh: 'refresh',
       token: token,
       microsoftId: String(microsoft_id),
-      domain: "microsoft_domain",
       name: '',
-      graphqlUrl: ''
   })
 }
 
