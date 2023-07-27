@@ -1,3 +1,6 @@
+import { NetworkRepository } from "@repositories";
+import { getListOfTeams } from "./microsoft-info.logic";
+
 export enum SettingsBlockCallback {
   Save = 'save',
   ModalSave = 'modal-save',
@@ -9,3 +12,4 @@ export enum SettingsBlockCallback {
   FetchChannels = 'fetch-channels',
   SaveModal = 'save-modal'
 }
+

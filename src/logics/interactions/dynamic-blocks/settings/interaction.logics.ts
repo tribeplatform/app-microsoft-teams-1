@@ -1,20 +1,18 @@
+import { ChannelRepository } from '@/repositories/channel.repository'
 import {
-  InteractionInput,
   InteractionWebhook,
-  InteractionWebhookResponse,
-  Webhook,
+  InteractionWebhookResponse
 } from '@interfaces'
-import { Network } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 import { PermissionContext } from '@tribeplatform/gql-client/types'
 import { globalLogger } from '@utils'
 import { getInteractionNotSupportedError } from '../../../error.logics'
 import { getCallbackResponse } from './callback.logics'
-import { getConnectedSettingsResponse, getDisconnectedSettingsResponse } from './helper'
+import { getConnectedSettingsResponse, getDisconnectedSettingsResponse, withDetails } from './helper'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
-const getNetworkSettingsInteractionResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
+export const getNetworkSettingsInteractionResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   logger.debug('getNetworkSettingsInteractionResponse called', { options })
   const {
     networkId,
@@ -23,8 +21,20 @@ const getNetworkSettingsInteractionResponse = async (options: InteractionWebhook
   if (callbackId) {
     return getCallbackResponse(options)
   }
+
+
+
+ 
+
+
   const network = await NetworkRepository.findUnique(networkId)
+  const info = await ChannelRepository.findUnique
   console.log(network)
+  console.log(await ChannelRepository.findMany())
+
+  if (info) {
+    return withDetails(options, network)
+  }
 
   if (!network) {
     return getDisconnectedSettingsResponse({

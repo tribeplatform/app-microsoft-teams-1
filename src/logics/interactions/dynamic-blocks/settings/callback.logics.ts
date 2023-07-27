@@ -4,15 +4,18 @@ import { Network } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 
 import { getConnectMicrosoftUrl } from '@/logics/oauth.logic'
+import { ChannelRepository } from '@/repositories/channel.repository'
 import { getNetworkClient } from '@clients'
 import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
 import { globalLogger } from '@utils'
 import { getInteractionNotSupportedError } from '../../../error.logics'
 import { SettingsBlockCallback } from './constants'
-import { getConnectModalResponse, getDisconnectedSettingsResponse, getOpenToastCallbackResponse } from './helper'
+import { getConnectModalResponse, getConnectedSettingsResponse, getDisconnectedSettingsResponse, getOpenToastCallbackResponse } from './helper'
 import { getListOfChannels, getListOfTeams, getSpaces } from './microsoft-info.logic'
 import { getConnectModalSlate } from './slates/connect-modal.slate'
-import { connectedAddedDetails } from './slates/connected-inputAdded.slate'
+import { getNetworkSettingsInteractionResponse } from './interaction.logics'
+import { type } from 'os'
+import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
 
 
 
@@ -87,25 +90,26 @@ const getAuthRevokeCallbackResponse = async (options: InteractionWebhook): Promi
 
 const getOpenModalCallbackResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options;
-  // const {interactionId} = data
   logger.debug('getConnectCallbackResponse called', { networkId })
 
   const user = await NetworkRepository.findUnique(networkId)
   const accessToken = user.token 
-  // const teamId = 'c8033bf0-268a-4ff2-8968-81e9b799fc82'
-  // const channels = await getListOfChannels(accessToken, teamId)
-  const spaces = await getSpaces(networkId)
+
+  const spacesList = await getSpaces(networkId)
+
+  const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
+
+
+
   const teams = await getListOfTeams(accessToken);
   console.log('Spaces:', spaces)
   console.log('teams:', teams)
-  // console.log('channels:', channels)
 
   return getConnectModalResponse({
     user: await NetworkRepository.findUniqueOrThrow(networkId),
     spaces: spaces, // Pass the spaces dictionary to the 'spaces' parameter in getConnectModalResponse
     teams: teams,
     channels: []
-    // interactionId: interactionId
 
   });
 }
@@ -116,24 +120,51 @@ const getOpenModalCallbackResponse = async (options: InteractionWebhook): Promis
 
 const getFetchChannelsCallbackResponse = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options;
-  const { teamId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+  const { teamId, spaceId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
 
   // Your code here to fetch the channels for the selected team and space
   try {
     const user = await NetworkRepository.findUnique(networkId);
     const accessToken = user.token;
+ 
   
-    // Fetch the list of channels for the selected team using 'selectedTeamId' and 'accessToken'
-    // const spaces = await getSpaces
+    const spacesList = await getSpaces(networkId)
+    const teams = await getListOfTeams(accessToken);
+    const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
+
+    for (var i=0; i<spaces.length; i++){
+        if (spaces[i].value==spaceId){
+          let element = spaces[i]
+          spaces.splice(i,1)
+          spaces.splice(0,0,element)
+        }
+
+    }
+
+    for (var i=0; i<teams.length; i++){
+      if (teams[i].value==teamId){
+        let element = teams[i]
+        teams.splice(i,1)
+        teams.splice(0,0,element)
+      }
+
+  }
+
+    
+  
+
+
     const channels = await getListOfChannels(accessToken, teamId as string);
     console.log('Channels:', channels);
+    console.log("teams:", teamId)
+    console.log("spaces:", spaceId)
 
     // Now that you have the channels, update the slate with the new items for the channels dropdown
     const updatedModalSlate = getConnectModalSlate({
-      spaces: [],
-      teams: {},
+      spaces: spaces,
+      teams: teams,
       channels: channels,
-      
+      showTeams: true
     });
     console.log(JSON.stringify({
       type: WebhookType.Interaction,
@@ -193,29 +224,22 @@ const getFetchChannelsCallbackResponse = async (options: InteractionWebhook): Pr
 
 const handleSaveButtonClick = async (options: InteractionWebhook): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options;
-  const { spaces, teams, channels } = data.inputs;
-  const {dynamicBlockKey} = data
+  const { spaceId: spaces, teamId:teams, channelId } = data.inputs;
   try {
     // Save the user's selections in the database, along with other existing fields
-    // await NetworkRepository.update(networkId, {
-    //   selectedSpace: spaces,
-    //   selectedTeam: teams,
-    //   selectedChannel: channels,
-    // });
-
-    // Get the user details from the database
-  
-    const user = await NetworkRepository.findUnique(networkId);
-
-    // Construct the updated slate with the selected details
-    const updatedSlate = connectedAddedDetails({
-      user,
-      selectedSpace: spaces as string,
-      selectedTeam: teams as string,
-      selectedChannel: channels as string,
+    console.log("hi", spaces)
+    await ChannelRepository.upsert(networkId, {
+      spaceIds: spaces as string,
+      teamId: teams as string,
+      channelId: channelId as string,
     });
-  
-    // Return the updated slate to show the selected details
+    // const network = await NetworkRepository.findUnique(networkId)
+
+    console.log(await ChannelRepository.findMany())
+
+    const user = await NetworkRepository.findUnique(networkId);
+    // return getConnectedSettingsResponse(options.data, network)
+    // const updateSlate = getConnectedSettingsSlate2()
     return {
       type: WebhookType.Interaction,
       status: WebhookStatus.Succeeded,
@@ -226,17 +250,18 @@ const handleSaveButtonClick = async (options: InteractionWebhook): Promise<Inter
             type: InteractionType.Close,
           },
           {
-            id: 'data.interactionId',
+            id: data.interactionId,
             type: InteractionType.Reload,
-            // slate: rawSlateToDto(updatedSlate),
             props: {
-              dynamicBlockKeys: [dynamicBlockKey]
+              dynamicBlockKeys: ["settings"]
             }
           },
         ],
+        
       },
     };
 
+  
   } catch (error) {
     console.error('Error saving data:', error);
     // Handle the error in some way, e.g., show an error toast to the user

@@ -13,7 +13,7 @@ export const msalConfig = {
     authority: 'https://login.microsoftonline.com/common',
     clientSecret: 'PT48Q~Wby_OkU~LjWpaVMDKoETqzy54lBa0-ec_e',
     // Full redirect URL, in form of http://localhost:3000
-    redirectUri: 'https://hamid.bettermode.ngrok.io/',
+    redirectUri: 'https://masih.bettermode.ngrok.app/',
     
     
   },

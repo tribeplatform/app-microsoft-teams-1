@@ -1,11 +1,11 @@
 import { InteractionType, ToastStatus, WebhookStatus, WebhookType } from '@enums'
-import { InteractionWebhookResponse } from '@interfaces'
+import { InteractionWebhook, InteractionWebhookResponse } from '@interfaces'
 import { Network } from '@prisma/client'
 import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
 
-import { Space } from '@tribeplatform/gql-client/types'
+import { ChannelRepository } from '@/repositories/channel.repository'
 import { getConnectModalSlate } from './slates/connect-modal.slate'
-import { connectedAddedDetails } from './slates/connected-inputAdded.slate'
+import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
 import { getConnectedSettingsSlate } from './slates/connected.slate'
 import { getNotConnectedSettingsSlate } from './slates/not-connected.slate'
 // import { getConnectedSettingsSlate } from './slates/connected-settings.slate'
@@ -19,6 +19,7 @@ export const getConnectedSettingsResponse = async (options: {
     interactionId,
   } = options
 
+  
   const slate = getConnectedSettingsSlate({
     user,
   })
@@ -38,26 +39,21 @@ export const getConnectedSettingsResponse = async (options: {
 }
 
 
+export const withDetails = async (options: InteractionWebhook, user: Network): Promise<InteractionWebhookResponse> => {
 
-export const getConnectedSettingsResponse2 = async (options: {
-  user: Network
-  selectedSpace: string,
-  selectedTeam: string,
-  selectedChannel: string
-  
-},): Promise<InteractionWebhookResponse> => {
-  const {
-    user,
-    selectedSpace,
-    selectedTeam,
-    selectedChannel
-  } = options
+    const { networkId, data } = options;
+    const {interactionId} = data
 
-  const slate = connectedAddedDetails({
+    const ch = await ChannelRepository.findUnique(networkId)
+    const selectedChannel = ch.channelId
+    const selectedSpace = ch.spaceIds
+    const selectedteam = ch.teamId
+
+  const slate = getConnectedSettingsSlate2({
     user,
+    selectedChannel,
     selectedSpace,
-    selectedTeam,
-    selectedChannel
+    selectedteam
   })
   return {
     type: WebhookType.Interaction,
@@ -65,9 +61,9 @@ export const getConnectedSettingsResponse2 = async (options: {
     data: {
       interactions: [
         {
-          id: 'interactionId',
+          id: interactionId,
           type: InteractionType.Show,
-          slate: rawSlateToDto(slate),
+          slate: rawSlateToDto(await slate),
         },
       ],
     },
@@ -77,32 +73,10 @@ export const getConnectedSettingsResponse2 = async (options: {
 
 
 
-// export const getConnectedSettingDetails = async (options: {
-//   interactionId: string
 
-  
-// }, user: Network): Promise<InteractionWebhookResponse> => {
-//   const {
-//     interactionId,
-//   } = options
 
-//   const slate = connectedAddedDetails({
-//     user,
-//   })
-//   return {
-//     type: WebhookType.Interaction,
-//     status: WebhookStatus.Succeeded,
-//     data: {
-//       interactions: [
-//         {
-//           id: interactionId,
-//           type: InteractionType.Show,
-//           slate: rawSlateToDto(slate),
-//         },
-//       ],
-//     },
-//   }
-// }
+
+
 
 
 export const getDisconnectedSettingsResponse = async (options: {
@@ -124,12 +98,15 @@ export const getDisconnectedSettingsResponse = async (options: {
     },
   }
 }
+
+
+
 export const getConnectModalResponse = async (options: {
   user: Network
-  spaces?: Array<Space>;
+  spaces?: object;
   teams: object
   channels: object
-  interactionId: string
+  // interactionId: string
 
 }): Promise<InteractionWebhookResponse> => {
   const {
@@ -150,8 +127,8 @@ export const getConnectModalResponse = async (options: {
     data: {
       interactions: [
         {
-          id: options.interactionId,
-          // id: 'connect to channels',
+          // id: options.interactionId,
+          id: 'connect to channels',
           type: InteractionType.OpenModal,
           props: {
             size: 'md',

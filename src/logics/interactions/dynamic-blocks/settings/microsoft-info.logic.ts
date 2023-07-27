@@ -47,7 +47,6 @@ export const getSpaces = async (networkId: string) => {
 
 
 export const getListOfChannels = async (accessToken: string, teamId: string) => {
-  console.log('teamid', teamId)
   try {
     const response = await axios.get(`https://graph.microsoft.com/v1.0/teams/${teamId}/channels`, {
       headers: {

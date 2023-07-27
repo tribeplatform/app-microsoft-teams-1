@@ -10,7 +10,8 @@ import { getAuthSettingsBlocks } from './auth.slate'
 
 
 export const getConnectedSettingsSlate = (options: {
-  user: Network
+  user: Network,
+  
 
 }): RawSlateDto => {
   const {

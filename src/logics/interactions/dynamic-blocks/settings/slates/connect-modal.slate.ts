@@ -4,11 +4,16 @@ import { SettingsBlockCallback } from '../constants';
 
 export const getConnectModalSlate = (options?: {
   showEnvPicker?: true;
-  spaces?: Array<Space>;
+  spaces?: object;
   teams?: object;
   channels?: object; // Add channels option
+  showTeams?: boolean;
+
+
 }): RawSlateDto => {
-  const { spaces, teams, channels } = options || {};
+  const teamTest = {value:111, text: 'test'};
+  const { spaces, teams, channels, showTeams } = options || {};
+
   const id = Math.floor(Math.random() * Date.now()).toString(36)
   return {
     rootBlock: id,
@@ -18,6 +23,15 @@ export const getConnectModalSlate = (options?: {
         name: 'Form',
         props: {
           callbackId: SettingsBlockCallback.SaveModal,
+
+
+          defaultValues: {
+
+        
+            teamId: showTeams ? teams[0].value : [],
+            spaceId: spaces[0].value
+          },
+  
           spacing: 'md',
         },
         children: ['auth'],
@@ -27,7 +41,7 @@ export const getConnectModalSlate = (options?: {
         id: 'auth',
         name: 'Container',
         props: { spacing: 'md' },
-        children: ['auth.spacePicker', 'auth.teamPicker', 'auth.channelPicker', 'auth.fetchChannelsButton', 'auth.save', 'auth.footer'], // Add 'auth.channelPicker'
+        children: ['auth.spacePicker', 'auth.teamId', 'auth.channelPicker', 'auth.fetchChannelsButton', 'auth.save', 'auth.footer'], // Add 'auth.channelPicker'
       },
       {
         id: 'auth.spacePicker',
@@ -35,12 +49,12 @@ export const getConnectModalSlate = (options?: {
         props: {
           name: 'spaceId',
           label: 'Space',
-          items: spaces.map(space => ({value: space.id, text: space.name})),
+          items: spaces,
           required: true,
         },
       },
       {
-        id: 'auth.teamPicker',
+        id: 'auth.teamId',
         name: 'Select',
         props: {
           callbackId: SettingsBlockCallback.FetchChannels,

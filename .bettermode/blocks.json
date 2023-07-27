@@ -2,7 +2,7 @@
   "defaults": [
     {
       "key": "settings",
-      "interactionUrl": "https://masih-bettermode.ngrok.io/webhook/interaction",
+      "interactionUrl": "https://masih.bettermode.ngrok.app/webhook/interaction",
       "contexts": null
     }
   ],
