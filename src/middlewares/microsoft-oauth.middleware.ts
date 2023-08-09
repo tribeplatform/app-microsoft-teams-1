@@ -4,6 +4,13 @@ import { MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, SERVER_URL } from '@confi
 import { Request, Response } from 'express'
 import passport from 'passport'
 import { Strategy as MicrosoftPassportStrategy } from 'passport-microsoft'
+import refresh from 'passport-oauth2-refresh'
+
+
+
+
+
+
 
 const OAUTH_SCOPES = [
   'user.Read',
@@ -109,4 +116,10 @@ export const consumerExtractorMiddleware = async (req: Request, res: Response, n
   next()
 }
 
+export const RefreshTokenClient = (refreshToken) => {
 
+  return refresh.requestNewAccessToken('microsoft', refreshToken, (err, accessToken, refreshToken) => {
+    console.log("this is refresed access",accessToken," refresh ", refreshToken)
+
+  })
+}

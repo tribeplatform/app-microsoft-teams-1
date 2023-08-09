@@ -1075,9 +1075,9 @@
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-2.0.0.tgz"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@tribeplatform/gql-client@^2.2.8":
+"@tribeplatform/gql-client@^2.3.0":
   version "2.3.0"
-  resolved "https://registry.npmjs.org/@tribeplatform/gql-client/-/gql-client-2.3.0.tgz"
+  resolved "https://registry.yarnpkg.com/@tribeplatform/gql-client/-/gql-client-2.3.0.tgz#aef07eb166e7f162fd0091b054ac0bb46cc48c21"
   integrity sha512-B7maCbCWv+LgClSFdDxSXw5MgpyR+7MAdEtlY35sMghvU8jG2pq+iGJifYWkdWCBNlG0w+jr4mL/biSF6/6VrQ==
   dependencies:
     graphql "^15.5.1"
@@ -5958,6 +5958,11 @@ passport-microsoft@^1.0.0:
   dependencies:
     passport-oauth2 "1.6.1"
     pkginfo "0.4.x"
+
+passport-oauth2-refresh@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/passport-oauth2-refresh/-/passport-oauth2-refresh-2.2.0.tgz#e60dd4e84e8df3c6ead87b6aab0754dec7a89aca"
+  integrity sha512-yXwXHL7ZZH0s2oknnjugfvwzCB5mpJ5ZNpzkb+b/sTsHeZFbx2BXfzvwsoD4aq6gq/aWuCxBV89ef+L/cjjrjg==
 
 passport-oauth2@1.6.1:
   version "1.6.1"

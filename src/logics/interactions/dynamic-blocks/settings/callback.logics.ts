@@ -228,7 +228,8 @@ const handleSaveButtonClick = async (options: InteractionWebhook): Promise<Inter
   try {
     // Save the user's selections in the database, along with other existing fields
     console.log("hi", spaces)
-    await ChannelRepository.upsert(networkId, {
+    await ChannelRepository.create({
+      networkId: networkId as string,
       spaceIds: spaces as string,
       teamId: teams as string,
       channelId: channelId as string,

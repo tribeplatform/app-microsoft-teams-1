@@ -22,6 +22,7 @@ model Network {
   refresh String
   microsoftId String 
   name String
+  
 
 }
 
@@ -31,12 +32,17 @@ model Channel {
   createdAt  DateTime   @default(now())
   updatedAt DateTime @updatedAt
   
-  networkId String @unique
+  networkId String 
   channelId String
   teamId String
-  spaceIds String[]
+  spaceIds String 
+
+  @@index([networkId])
 
 }
+
+
+
 
 
   

@@ -32,7 +32,7 @@ export const getConnectedSettingsSlate2 = async (options: {
   const channels = await getListOfChannels(accessToken, selectedteam);
 
   // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel
-  const selectedSpaceText = spaces.find(space => space.value === selectedSpace[0])?.text || '';
+  const selectedSpaceText = spaces.find(space => space.value === selectedSpace)?.text || '';
   const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || '';
   const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
   console.log("hello: ", spaces)

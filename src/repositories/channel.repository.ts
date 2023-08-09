@@ -34,4 +34,9 @@ export const ChannelRepository = {
   findUnique: (networkId: string): Promise<Channel> => {
     return client.channel.findUnique({ where: { networkId } })
   },
+
+
+
+
+  
 }

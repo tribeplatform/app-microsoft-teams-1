@@ -29,7 +29,18 @@ export class OAuthController {
       authInfo: request.user,
       state: request.state,
     })
-    response.redirect(request.state.redirectUrl)
+    response.redirect("https://login.microsoftonline.com/organizations/adminconsent?client_id=e9c0fff6-84b6-476e-b709-152061da9d9a")
+    // response.redirect(request.state.redirectUrl)
     return response
   }
+  @Get('/application')
+  async application(@Req() request: Request, @Res() response: Response): Promise<Response> {
+     this.logger.verbose('Received application oauth callback request')
+      response.redirect("https://internship2023.bettermode.io/manage/apps/microsoft-plugin-dev")
+      return response
+  }
 }
+
+
+
+
