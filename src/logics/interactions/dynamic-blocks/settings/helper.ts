@@ -44,16 +44,22 @@ export const withDetails = async (options: InteractionWebhook, user: Network): P
     const { networkId, data } = options;
     const {interactionId} = data
 
-    const ch = await ChannelRepository.findUnique(networkId)
-    const selectedChannel = ch.channelId
-    const selectedSpace = ch.spaceIds
-    const selectedteam = ch.teamId
+    const ch = await ChannelRepository.findMany()
+    // [chanle1,chan2]
+    // ch[0].channelId
+
+    const selectedChannel = ch[0].channelId
+    const selectedSpace = ch[0].spaceIds
+    const selectedteam = ch[0].teamId
 
   const slate = getConnectedSettingsSlate2({
     user,
     selectedChannel,
     selectedSpace,
     selectedteam
+
+
+   
   })
   return {
     type: WebhookType.Interaction,

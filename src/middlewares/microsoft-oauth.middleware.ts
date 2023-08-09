@@ -1,6 +1,7 @@
 import { MicrosoftAuthProfile, MicrosoftState } from '@/interfaces/microsoft-teams.interface'
 import { verifyJwt } from '@/utils/jwt.utils'
 import { MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, SERVER_URL } from '@config'
+import { NetworkRepository } from '@repositories'
 import { Request, Response } from 'express'
 import passport from 'passport'
 import { Strategy as MicrosoftPassportStrategy } from 'passport-microsoft'
@@ -63,43 +64,6 @@ class MicrosofTeamstStrategy extends MicrosoftPassportStrategy {
     ),
   )
 
-// var MicrosoftStrategy = require('passport-microsoft').Strategy;
-// passport.use(new MicrosoftStrategy({
-//     // Standard OAuth2 
-//     clientID: '568aaefe-81b7-487a-b19a-21c4a96498dc',
-//     clientSecret: 'PT48Q~Wby_OkU~LjWpaVMDKoETqzy54lBa0-ec_e',
-//     callbackURL: "oauth/redirect",
-//     scope: ['user.read'],
-  
-//     cashe: {},
-
-//     // Microsoft specific options
-
-//     // [Optional] The tenant for the application. Defaults to 'common'. 
-//     // Used to construct the authorizationURL and tokenURL
-//     tenant: 'common',
-
-//     // [Optional] The authorization URL. Defaults to `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`
-//     authorizationURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-
-//     // [Optional] The token URL. Defaults to `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`
-//     tokenURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-//   },
-  
-//   function (accessToken, refreshToken, profile, done, request: Request,) {
-//     // asynchronous verification, for effect...
-//     process.nextTick(function () {
-  
-//       // To keep the example simple, the user's Microsoft Graph profile is returned to
-//       // represent the logged-in user. In a typical application, you would want
-//       // to associate the Microsoft account with a user record in your database,
-//       // and return that user instead.
-//       console.log(accessToken,profile)
-//       const user: Request['user'] = { accessToken, refreshToken, profile }
-//       return done(null,user);
-//     });
-//   }
-// ));
 
 export const middleMicrosoft = passport.authenticate('microsoft');
 
@@ -116,10 +80,17 @@ export const consumerExtractorMiddleware = async (req: Request, res: Response, n
   next()
 }
 
-export const RefreshTokenClient = (refreshToken) => {
+export const RefreshTokenClient = (refreshToken,networkId) => {
 
-  return refresh.requestNewAccessToken('microsoft', refreshToken, (err, accessToken, refreshToken) => {
+  return refresh.requestNewAccessToken('microsoft', refreshToken, async (err, accessToken, refreshToken) => {
     console.log("this is refresed access",accessToken," refresh ", refreshToken)
+    await NetworkRepository.update(networkId, {
+      refresh: refreshToken,
+      token: accessToken,
+    })
 
   })
 }
+
+
+

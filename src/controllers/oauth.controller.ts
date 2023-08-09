@@ -29,7 +29,7 @@ export class OAuthController {
       authInfo: request.user,
       state: request.state,
     })
-    response.redirect("https://login.microsoftonline.com/organizations/adminconsent?client_id=e9c0fff6-84b6-476e-b709-152061da9d9a")
+    response.redirect("https://login.microsoftonline.com/organizations/adminconsent?client_id=9cb2f679-0667-4d7d-861b-31d2b935916f")
     // response.redirect(request.state.redirectUrl)
     return response
   }

@@ -28,13 +28,13 @@ export const getNetworkSettingsInteractionResponse = async (options: Interaction
 
 
   const network = await NetworkRepository.findUnique(networkId)
-  const info = await ChannelRepository.findUnique
+  const info = await ChannelRepository.findMany()
   console.log(network)
   console.log(await ChannelRepository.findMany())
 
-  // if (info) {
-  //   return withDetails(options, network)
-  // }
+  if (info.length>0) {
+    return withDetails(options, network)
+  }
 
   if (!network) {
     return getDisconnectedSettingsResponse({

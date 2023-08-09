@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "context": "POST",
+    "entityType": null,
+    "name": "test",
+    "description": null,
+    "favicon": null,
+    "key": "test-shortcuts",
+    "interactionUrl": "https://hamid.bettermode.ngrok.io/webhook/interaction",
+    "states": null
+  }
+]

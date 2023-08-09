@@ -28,7 +28,7 @@ export const getConnectedSettingsSlate2 = async (options: {
   const spacesList = await getSpaces(user.networkId);
   const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
 
-  const teams = await getListOfTeams(accessToken);
+  const teams = await getListOfTeams(accessToken, user.refresh, user.networkId);
   const channels = await getListOfChannels(accessToken, selectedteam);
 
   // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel

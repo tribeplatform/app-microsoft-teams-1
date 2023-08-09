@@ -2,9 +2,19 @@
   "defaults": [
     {
       "key": "settings",
-      "interactionUrl": "https://masih.bettermode.ngrok.app/webhook/interaction",
+      "interactionUrl": "https://hamid.bettermode.ngrok.io/webhook/interaction",
       "contexts": null
     }
   ],
-  "customs": []
+  "customs": [
+    {
+      "name": "Test",
+      "key": "test-dynamic",
+      "interactionUrl": "https://hamid.bettermode.ngrok.io/webhook/interaction",
+      "contexts": null,
+      "description": null,
+      "favicon": null,
+      "image": null
+    }
+  ]
 }

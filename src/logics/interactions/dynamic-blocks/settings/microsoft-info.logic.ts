@@ -1,8 +1,9 @@
 import { getNetworkClient } from '@clients';
+import { RefreshTokenClient } from '@middlewares';
 import axios from 'axios';
 
 // Function to get the list of teams using the access token
-export const getListOfTeams = async (accessToken: string) => {
+export const getListOfTeams = async (accessToken: string, refreshToken, networkId) => {
   try {
     const response = await axios.get('https://graph.microsoft.com/v1.0/me/joinedTeams', {
       headers: {
@@ -20,7 +21,8 @@ export const getListOfTeams = async (accessToken: string) => {
     return Teamdictionary;
   } catch (error) {
     console.error('Error fetching teams:', error);
-    throw error; // You can handle the error in the calling function
+    RefreshTokenClient(refreshToken, networkId)
+    // You can handle the error in the calling function
   }
 };
 
