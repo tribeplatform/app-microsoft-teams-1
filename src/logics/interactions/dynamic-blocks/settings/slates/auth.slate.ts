@@ -3,6 +3,7 @@ import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 import { SettingsBlockCallback } from '../constants'
 import { title } from 'process'
 export const getAuthSettingsBlocks = (options: {
+  childern?: string[]
   id: string
   description: string
   action: string
@@ -12,7 +13,9 @@ export const getAuthSettingsBlocks = (options: {
   secondaryAction?: string
   secondaryActionCallbackId?: SettingsBlockCallback
 }): RawBlockDto[] => {
+  
   const {
+    childern,
     id,
     title,
     description,
@@ -22,6 +25,10 @@ export const getAuthSettingsBlocks = (options: {
     secondaryAction,
     secondaryActionCallbackId,
   } = options
+  const blocks = []
+  // for (const child of childern) {
+  //   blocks.push({})
+  // }
   return [
     {
       id,

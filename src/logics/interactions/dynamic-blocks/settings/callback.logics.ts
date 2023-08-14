@@ -221,7 +221,7 @@ const handleSaveButtonClick = async (
   const { spaceId: spaces, teamId: teams, channelId } = data.inputs
   try {
     // Save the user's selections in the database, along with other existing fields
-    console.log('hi', spaces)
+    console.log('hi', teams)
     await ChannelRepository.create({
       networkId: networkId as string,
       spaceIds: spaces as string,
@@ -238,7 +238,6 @@ const handleSaveButtonClick = async (
 
     try {
       await installingBotTeams(networkId, user.token, teams)
-
     } catch (e) {
       console.error('Error installing bot:', e)
       // Handle the error in some way, e.g., show an error toast to the user
@@ -251,14 +250,11 @@ const handleSaveButtonClick = async (
       //   },
       // })
     }
-    try{
-    await sendProactiveMessage('Hello amir', [
-      channelId as string,
-    ])
-  } catch (e) {
-    console.log(e)
-  }
-
+    try {
+       sendProactiveMessage('Hello amir', [channelId as string])
+    } catch (e) {
+      console.log(e)
+    }
 
     return {
       type: WebhookType.Interaction,
@@ -270,7 +266,7 @@ const handleSaveButtonClick = async (
             type: InteractionType.Close,
           },
           {
-            id: data.interactionId,
+            id: data.interactionId+"reaload",
             type: InteractionType.Reload,
             props: {
               dynamicBlockKeys: ['settings'],

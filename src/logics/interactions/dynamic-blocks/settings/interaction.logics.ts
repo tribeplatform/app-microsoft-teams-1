@@ -32,16 +32,16 @@ export const getNetworkSettingsInteractionResponse = async (options: Interaction
   console.log(network)
   console.log(await ChannelRepository.findMany())
 
-  if (info.length>0) {
-    return withDetails(options, network)
-  }
+  
 
   if (!network) {
     return getDisconnectedSettingsResponse({
       interactionId,
     })
   }
-
+  if (info.length>0) {
+    return withDetails(options, network)
+  }
   if (network) {
     return getConnectedSettingsResponse(options.data, network)
   }

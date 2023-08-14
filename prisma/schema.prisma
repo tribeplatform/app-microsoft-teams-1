@@ -19,9 +19,10 @@ model Network {
   memberId String 
   userId String
   token String
+
   refresh String
   microsoftId String 
-  name String
+  tenantId String
   
 
 }

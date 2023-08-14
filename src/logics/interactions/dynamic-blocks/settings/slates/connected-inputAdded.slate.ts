@@ -12,6 +12,7 @@ import { getAuthSettingsBlocks } from './auth.slate'
 
 export const getConnectedSettingsSlate2 = async (options: {
   user: Network
+  arryChannel?: string[]
   selectedChannel,
   selectedSpace,
   selectedteam
@@ -20,8 +21,8 @@ export const getConnectedSettingsSlate2 = async (options: {
     user,
     selectedChannel,
     selectedSpace,
-    selectedteam
-
+    selectedteam,
+    arryChannel
   } = options
 
   const accessToken = user.token;
@@ -53,6 +54,7 @@ export const getConnectedSettingsSlate2 = async (options: {
     
 
     ...getAuthSettingsBlocks({
+
         id: 'adding-teams',
         action: 'Add Teams',
         title: 'Teams channels',
@@ -67,7 +69,7 @@ export const getConnectedSettingsSlate2 = async (options: {
         actionCallbackId: SettingsBlockCallback.AuthVoke,
         actionVariant: 'danger',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
-        description: `Connected by [${user.name}] on ${moment(user.createdAt).format(
+        description: `Connected on ${moment(user.createdAt).format(
           'MMMM Do YYYY, h:mm a',
         )}<br>By revoking access, you will lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,
       }),
