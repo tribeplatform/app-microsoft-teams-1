@@ -38,6 +38,7 @@ model Channel {
   teamId String
   spaceIds String 
 
+
   @@index([networkId])
 
 }

@@ -1,11 +1,13 @@
+import { getAppToken } from '@/logics/oauth.logic';
 import { getNetworkClient } from '@clients';
 import { RefreshTokenClient } from '@middlewares';
 import axios from 'axios';
+import { get } from 'http';
 
 // Function to get the list of teams using the access token
-export const getListOfTeams = async (accessToken: string, refreshToken, networkId) => {
+export const getListOfTeams = async (accessToken: string, refreshToken, networkId, tenantId,id) => {
   try {
-    const response = await axios.get('https://graph.microsoft.com/v1.0/me/joinedTeams', {
+    const response = await axios.get('https://graph.microsoft.com/v1.0/users/'+id+'/joinedTeams', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -48,7 +50,7 @@ export const getSpaces = async (networkId: string) => {
 }
 
 
-export const getListOfChannels = async (accessToken: string, teamId: string) => {
+export const getListOfChannels = async (accessToken: string, teamId: string, networkId, tenantId) => {
   try {
     const response = await axios.get(`https://graph.microsoft.com/v1.0/teams/${teamId}/channels`, {
       headers: {

@@ -3,11 +3,15 @@ import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 import { SettingsBlockCallback } from '../constants'
 import { title } from 'process'
 export const getAuthSettingsBlocks = (options: {
-  childern?: string[]
+  childern?: any
   id: string
   description: string
   action: string
   title?: string
+  spaces?,
+  teams?,
+  channels?,
+
   actionVariant: 'outline' | 'primary' | 'danger'
   actionCallbackId: SettingsBlockCallback
   secondaryAction?: string
@@ -15,6 +19,9 @@ export const getAuthSettingsBlocks = (options: {
 }): RawBlockDto[] => {
   
   const {
+    spaces,
+    teams,
+    channels,
     childern,
     id,
     title,
@@ -25,7 +32,113 @@ export const getAuthSettingsBlocks = (options: {
     secondaryAction,
     secondaryActionCallbackId,
   } = options
-  const blocks = []
+
+  const card_content = 
+  {
+    id: `${id}.content`,
+    name: 'Card.Content',
+    children: [`${id}.container`,`${id}.rightContainer`],
+  }
+  // {
+    
+  //     id: `${id}.container`,
+  //     name: 'Container',
+  //     props: {
+  //       spacing: 'md',
+  //       direction: 'horizontal',
+  //     },
+  //     children: [`${id}.leftContainer`, `${id}.rightContainer`],
+  //   }
+  //   {
+    
+  //     id: `${id}.leftContainer`,
+  //     name: 'Container',
+  //     props: { alignment: { vertical: 'center' } },
+  //     children: [],
+    
+  // }
+
+
+const details = []
+if(childern){
+for (let i = 0; i< childern.length; i++){
+  const selectedSpaceText = spaces.find(space => space.value === childern[i].spaceIds)?.text || '';
+  const selectedTeamText = teams.find(team => team.value === childern[i].teamId)?.text || '';
+  const selectedChannelText = channels.find(channel => channel.value === childern[i].channelId)?.text || '';
+  details.push(
+    {
+      id: id+'.'+i+'container',
+      name: 'Container',
+      props: { padding:"xs", direction: 'horizontal' },
+      children: [id+'.'+i+'description', 'edit-button'+i, 'delete-button'+i],
+    },
+    {
+    id: id+'.'+i+'description',
+    name: 'Text',
+    props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
+    
+  },
+  {
+    id: 'edit-button'+i,
+    name: 'Button',
+    props: {  variant: 'outline', callbackId: 'e' },
+    childern: ['buttonEdit'+i]
+  },
+  {
+    id: 'buttonEdit'+i,
+    name: 'Text',
+    props: { value: 'edit' },
+  },
+  {
+    id: 'delete-button'+i,
+    name: 'Button',
+    props: {  variant: 'outline', callbackId: 'd'},
+    childern: ['buttonDelete'+i]
+  },
+  {
+    id: 'buttonDelete'+i,
+    name: 'Text',
+    props: { value: 'Delete' },
+  },
+//   {
+        
+//     "children": ["generate-button-text"],
+//     "id": "generate",
+//     "name": "Button",
+//     "props": {
+//       size: 'small',
+//         "callbackId":"generate",
+//         "variant":"primary"
+//     }
+// },
+// {
+    
+//     "children": [],
+//     "id": "generate-button-text",
+//     "name": "Icon",
+//     "props": {
+//         "value":"Generate API Key"
+//     }
+// }
+  )
+  card_content.children.push(id+'.'+i+'container')
+}
+
+}else{
+  const blocks =   {
+    id: `${id}.description`,
+    name: 'Text',
+    props: {
+      value: description,
+      format: 'markdown',
+    },
+  }
+  details.push(blocks)
+  card_content.children.push(`${id}.description`)
+}
+console.log('details', details)
+console.log('card_content', card_content)
+  
   // for (const child of childern) {
   //   blocks.push({})
   // }
@@ -40,41 +153,19 @@ export const getAuthSettingsBlocks = (options: {
       name: 'Card.Header',
       props: { title: title || 'Your authorization' },
     },
-    {
-      id: `${id}.content`,
-      name: 'Card.Content',
-      children: [`${id}.container`],
-    },
-    {
-      id: `${id}.container`,
-      name: 'Container',
-      props: {
-        spacing: 'md',
-        direction: 'horizontal',
-      },
-      children: [`${id}.leftContainer`, `${id}.rightContainer`],
-    },
-    {
-      id: `${id}.leftContainer`,
-      name: 'Container',
-      props: { alignment: { vertical: 'center' } },
-      children: [`${id}.description`],
-    },
-    {
-      id: `${id}.description`,
-      name: 'Text',
-      props: {
-        value: description,
-        format: 'markdown',
-      },
-    },
+
+
+
+    card_content,
+    ...details,
+
     {
       id: `${id}.rightContainer`,
       name: 'Container',
       props: {
         direction: 'horizontal-reverse',
         spacing: 'xs',
-        alignment: { vertical: 'center' },
+        alignment: { vertical: 'center', horizontal: 'right' },
         shrink: false,
       },
       children: [`${id}.action`, ...(secondaryAction ? [`${id}.secondaryAction`] : [])],

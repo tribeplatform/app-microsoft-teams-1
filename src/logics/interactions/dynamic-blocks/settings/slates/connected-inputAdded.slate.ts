@@ -16,30 +16,52 @@ export const getConnectedSettingsSlate2 = async (options: {
   selectedChannel,
   selectedSpace,
   selectedteam
+  teams,
+  channels
+  ch
 }): Promise<RawSlateDto> => {
   const {
     user,
     selectedChannel,
     selectedSpace,
     selectedteam,
-    arryChannel
+    ch,
+    teams,
+    channels
   } = options
 
   const accessToken = user.token;
   const spacesList = await getSpaces(user.networkId);
   const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
 
-  const teams = await getListOfTeams(accessToken, user.refresh, user.networkId);
-  const channels = await getListOfChannels(accessToken, selectedteam);
+ 
 
   // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel
   const selectedSpaceText = spaces.find(space => space.value === selectedSpace)?.text || '';
   const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || '';
   const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
-  console.log("hello: ", spaces)
-  console.log("sp: ", selectedSpaceText)
-  console.log("team: ", teams)
-  console.log('f:', selectedSpace)
+  // const card_content = 
+  //   {
+  //     children: [],
+  //     id: 'all-channels',
+  //     name: 'Container',
+  //     props: { spacing: 'md' },
+  //   }
+  // const details = []
+  // for (let i = 0; i< ch.length; i++){
+  //   const selectedSpaceText = spaces.find(space => space.value === ch[i].spaceIds)?.text || '';
+  //   const selectedTeamText = teams.find(team => team.value === ch[i].teamId)?.text || '';
+  //   const selectedChannelText = channels.find(channel => channel.value === ch[i].channelId)?.text || '';
+  //   details.push({
+  //     id: 'details'+i,
+  //     name: 'Text',
+  //     props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}` },
+  //   })
+  //   card_content.children.push('details'+i)
+  // }
+  // console.log('details', details)
+  // console.log('card_content', card_content)
+  
   return {
     rootBlock: 'root',
     blocks: [
@@ -47,14 +69,23 @@ export const getConnectedSettingsSlate2 = async (options: {
         id: 'root',
         name: 'Container',
         props: { spacing: 'md' },
-        children: ['chanels-integration', 'adding-teams', 'auth'],
+        children: ['chanels-integration', 'adding-teams', 'auth','channels' ],
+      },
+      {
+        id: 'channels',
+        name: 'Card',
+        children: ['all-channels'],
       },
 
-
+      
+  
     
 
     ...getAuthSettingsBlocks({
-
+      teams,
+      channels,
+      spaces,
+      childern: ch,
         id: 'adding-teams',
         action: 'Add Teams',
         title: 'Teams channels',

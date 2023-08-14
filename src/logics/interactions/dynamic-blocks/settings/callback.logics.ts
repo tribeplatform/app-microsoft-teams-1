@@ -9,6 +9,7 @@ import { Network } from '@prisma/client'
 import { NetworkRepository } from '@repositories'
 
 import {
+  getAppToken,
   getConnectMicrosoftUrl,
   installingBotTeams,
   sendProactiveMessage,
@@ -73,7 +74,7 @@ const getAuthRedirectCallbackResponse = async (
   } catch (e) {
     console.log(e)
   }
-  console.log('we are here!', network)
+
   return getRedirectCallbackResponseMicrosoft({
     props: {
       url: await getConnectMicrosoftUrl({
@@ -116,7 +117,13 @@ const getOpenModalCallbackResponse = async (
 
   const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
 
-  const teams = await getListOfTeams(accessToken, user.refresh, networkId)
+  const teams = await getListOfTeams(
+    accessToken,
+    user.refresh,
+    networkId,
+    user.tenantId,
+    user.microsoftId,
+  )
   console.log('Spaces:', spaces)
   console.log('teams:', teams)
 
@@ -137,10 +144,16 @@ const getFetchChannelsCallbackResponse = async (
   // Your code here to fetch the channels for the selected team and space
   try {
     const user = await NetworkRepository.findUnique(networkId)
-    const accessToken = user.token
+    const accessToken = await getAppToken(user.token, user.networkId, user.tenantId)
 
     const spacesList = await getSpaces(networkId)
-    const teams = await getListOfTeams(accessToken, user.refresh, networkId)
+    const teams = await getListOfTeams(
+      accessToken,
+      user.refresh,
+      networkId,
+      user.tenantId,
+      user.microsoftId,
+    )
     const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
 
     for (var i = 0; i < spaces.length; i++) {
@@ -159,7 +172,12 @@ const getFetchChannelsCallbackResponse = async (
       }
     }
 
-    const channels = await getListOfChannels(accessToken, teamId as string)
+    const channels = await getListOfChannels(
+      accessToken,
+      teamId as string,
+      user.networkId,
+      user.tenantId,
+    )
     console.log('Channels:', channels)
     console.log('teams:', teamId)
     console.log('spaces:', spaceId)
@@ -219,6 +237,7 @@ const handleSaveButtonClick = async (
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
   const { spaceId: spaces, teamId: teams, channelId } = data.inputs
+  console.log('hi', data.inputs)
   try {
     // Save the user's selections in the database, along with other existing fields
     console.log('hi', teams)
@@ -230,28 +249,29 @@ const handleSaveButtonClick = async (
     })
     // const network = await NetworkRepository.findUnique(networkId)
 
-    console.log(await ChannelRepository.findMany())
-
     const user = await NetworkRepository.findUnique(networkId)
     // return getConnectedSettingsResponse(options.data, network)
     // const updateSlate = getConnectedSettingsSlate2()
 
     try {
-      await installingBotTeams(networkId, user.token, teams)
+      await installingBotTeams(networkId, user.token, teams, user.tenantId)
     } catch (e) {
       console.error('Error installing bot:', e)
       // Handle the error in some way, e.g., show an error toast to the user
-      // return getOpenToastCallbackResponse({
-      //   networkId: networkId,
-      //   data: {
-      //     interactionId: data.interactionId,
-      //     title: 'Error',
-      //     description: 'Error installing bot',
-      //   },
-      // })
+      if (e.response.status == 409) {
+      //   return getOpenToastCallbackResponse({
+      //     networkId: networkId,
+      //     data: {
+      //       interactionId: data.interactionId,
+      //       title: 'Error',
+      //       description: 'bot already exists!',
+      //     },
+      //   })
+      // }
     }
+  }
     try {
-       sendProactiveMessage('Hello amir', [channelId as string])
+      //  sendProactiveMessage('Hello amir', [channelId as string])
     } catch (e) {
       console.log(e)
     }
@@ -266,7 +286,7 @@ const handleSaveButtonClick = async (
             type: InteractionType.Close,
           },
           {
-            id: data.interactionId+"reaload",
+            id: data.interactionId + 'reaload',
             type: InteractionType.Reload,
             props: {
               dynamicBlockKeys: ['settings'],

@@ -29,13 +29,13 @@ export const connectToMicrosoft = async (options: {
     refreshToken: refresh,
   } = authInfo
   const microsoftId = await getMicrosoftID(token, MICROSOFT_ENDPOINT + 'v1.0/me')
-  console.log('microsfot ID', microsoftId)
+
   const tenantId = await getTenantId(
     token,
     MICROSOFT_ENDPOINT + 'v1.0/organization',
     networkId,
   )
-  await installingBotUser(networkId, token, microsoftId)
+  await installingBotUser(networkId, token, microsoftId,tenantId)
   await NetworkRepository.upsert(networkId, {
     memberId: actorId,
     userId: String(user_id),
@@ -87,15 +87,11 @@ export const getTenantId = async (token, endpoint, networkId) => {
   }
 }
 
-export const getAppToken = async (token, networkId) => {
+export const getAppToken = async (token, networkId, tenantId) => {
   const tokenRequest = {
     scopes: [MICROSOFT_ENDPOINT + '.default'], // e.g. ‘https://graph.microsoft.com/.default’
   }
-  const tenantId = await getTenantId(
-    token,
-    MICROSOFT_ENDPOINT + 'v1.0/organization',
-    networkId,
-  )
+
   const msalConfig = {
     auth: {
       clientId: MICROSOFT_CLIENT_ID,
@@ -110,13 +106,13 @@ export const getAppToken = async (token, networkId) => {
   return applicationAccessTokedn.accessToken
 }
 
-export const installingBotUser = async (networkId, token, microsfotID) => {
-  console.log('token bot', await getAppToken(token, networkId))
+export const installingBotUser = async (networkId, token, microsfotID, tenantId) => {
+
   console.log('installing bot for user')
   const options = {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${await getAppToken(token, networkId)}`,
+      Authorization: `Bearer ${await getAppToken(token, networkId, tenantId)}`,
     },
   }
   const data = {
@@ -133,20 +129,19 @@ try{
 }
 }
 
-export const installingBotTeams = async (networkId, token, teamId) => {
-  console.log('token bot', await getAppToken(token, networkId))
-  console.log('installing bot')
+export const installingBotTeams = async (networkId, token, teamId, tenantId) => {
+  
   const options = {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${await getAppToken(token, networkId)}`,
+      Authorization: `Bearer ${await getAppToken(token, networkId, tenantId)}`,
     },
   }
   const data = {
     'teamsApp@odata.bind': `https://graph.microsoft.com/v1.0/appCatalogs/teamsApps/${BOT_ID}`,
   }
   const endpoint = MICROSOFT_ENDPOINT + 'v1.0/teams/' + teamId + '/installedApps'
-  console.log(endpoint)
+
 
   const response = await axios.post(endpoint, data, options)
   console.log('installing status', response.status)
@@ -157,10 +152,8 @@ export const sendProactiveMessage = async (message: string, channels: string[]) 
     channelIds: channels,
   }
   const endpoint = 'http://localhost:3978/api/notification'
-  try {
+  
     const response = await axios.post(endpoint, options)
     console.log('message status', response.status)
-  } catch (error) {
-    console.log(error)
-  }
+
 }

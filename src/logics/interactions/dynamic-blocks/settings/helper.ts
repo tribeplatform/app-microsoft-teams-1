@@ -8,6 +8,8 @@ import { getConnectModalSlate } from './slates/connect-modal.slate'
 import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
 import { getConnectedSettingsSlate } from './slates/connected.slate'
 import { getNotConnectedSettingsSlate } from './slates/not-connected.slate'
+import { getListOfChannels, getListOfTeams } from './microsoft-info.logic'
+import { getAppToken } from '@/logics/oauth.logic'
 // import { getConnectedSettingsSlate } from './slates/connected-settings.slate'
 
 export const getConnectedSettingsResponse = async (options: {
@@ -51,26 +53,45 @@ export const withDetails = async (options: InteractionWebhook, user: Network): P
     const selectedChannel = ch[0].channelId
     const selectedSpace = ch[0].spaceIds
     const selectedteam = ch[0].teamId
+    const slates = []
+    const token = await getAppToken(user.networkId, user.networkId, user.tenantId)
+    const teams = await getListOfTeams(token, user.refresh, user.networkId, user.tenantId, user.microsoftId);
+    const channels = await getListOfChannels(token, selectedteam,user.networkId, user.tenantId );
 
-  const slate = getConnectedSettingsSlate2({
-    user,
-    selectedChannel,
-    selectedSpace,
-    selectedteam
+  
+      const slate = getConnectedSettingsSlate2({
+        user,
+        selectedChannel,
+        selectedSpace,
+        selectedteam,
+        teams,
+        channels,
+        ch
+      })
+
+    
+  // const slate = getConnectedSettingsSlate2({
+  //   user,
+  //   selectedChannel,
+  //   selectedSpace,
+  //   selectedteam
 
 
    
-  })
+  // })
   return {
     type: WebhookType.Interaction,
     status: WebhookStatus.Succeeded,
     data: {
       interactions: [
+        
         {
           id: interactionId,
           type: InteractionType.Show,
           slate: rawSlateToDto(await slate),
+          
         },
+   
       ],
     },
   }
