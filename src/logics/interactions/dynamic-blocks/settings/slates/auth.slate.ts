@@ -2,7 +2,8 @@ import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 
 import { SettingsBlockCallback } from '../constants'
 import { title } from 'process'
-export const getAuthSettingsBlocks = (options: {
+import { getListOfChannels } from '../microsoft-info.logic'
+export const getAuthSettingsBlocks = async (options: {
   childern?: any
   id: string
   description: string
@@ -11,14 +12,15 @@ export const getAuthSettingsBlocks = (options: {
   spaces?,
   teams?,
   channels?,
-
+  token?,
   actionVariant: 'outline' | 'primary' | 'danger'
   actionCallbackId: SettingsBlockCallback
   secondaryAction?: string
   secondaryActionCallbackId?: SettingsBlockCallback
-}): RawBlockDto[] => {
+}): Promise<RawBlockDto[]> => {
   
   const {
+    token,
     spaces,
     teams,
     channels,
@@ -60,11 +62,16 @@ export const getAuthSettingsBlocks = (options: {
 
 
 const details = []
+const length = childern?.length || 0
 if(childern){
 for (let i = 0; i< childern.length; i++){
   const selectedSpaceText = spaces.find(space => space.value === childern[i].spaceIds)?.text || '';
-  const selectedTeamText = teams.find(team => team.value === childern[i].teamId)?.text || '';
-  const selectedChannelText = channels.find(channel => channel.value === childern[i].channelId)?.text || '';
+  const selectedTeamText = teams.find(team => team.value === childern[i].teamId);
+  console.log('selectedchannel', childern[i].channelId)
+  const channel = await getListOfChannels(token, selectedTeamText.value );
+
+  const selectedChannelText = channel.find(channel => channel.value === childern[i].channelId)?.text || '';
+  const selectedObjectId = childern[i].id
   details.push(
     {
       id: id+'.'+i+'container',
@@ -75,14 +82,14 @@ for (let i = 0; i< childern.length; i++){
     {
     id: id+'.'+i+'description',
     name: 'Text',
-    props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
+    props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText.text}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
     
   },
   {
     id: 'edit-button'+i,
     name: 'Button',
-    props: {  variant: 'outline', callbackId: 'e' },
-    childern: ['buttonEdit'+i]
+    props: {  variant: 'secondary', callbackId: 'edit-'+selectedObjectId, text:'Edit' },
+    children: ['buttonEdit'+i]
   },
   {
     id: 'buttonEdit'+i,
@@ -92,14 +99,17 @@ for (let i = 0; i< childern.length; i++){
   {
     id: 'delete-button'+i,
     name: 'Button',
-    props: {  variant: 'outline', callbackId: 'd'},
-    childern: ['buttonDelete'+i]
+    props: {  variant: 'danger', callbackId: 'delete-'+selectedObjectId, text: "Delete"},
+    children: ['buttonDelete'+i]
+    
   },
   {
     id: 'buttonDelete'+i,
     name: 'Text',
     props: { value: 'Delete' },
   },
+ 
+ 
 //   {
         
 //     "children": ["generate-button-text"],
@@ -172,8 +182,11 @@ console.log('card_content', card_content)
     },
     {
       id: `${id}.action`,
-      name: 'Button',
-      props: { variant: actionVariant, callbackId: actionCallbackId, text: action },
+      name: (length>=3)?"Alert":'Button',
+      props:(length>=3) ? {
+        "status":"warning",
+        "title": "you have reached the max!",
+      } :{ variant: actionVariant, callbackId: actionCallbackId, text:action },
     },
     ...(secondaryAction
       ? [

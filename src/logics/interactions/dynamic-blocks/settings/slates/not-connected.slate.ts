@@ -4,7 +4,7 @@ import { SettingsBlockCallback } from '../constants'
 
 import { getAuthSettingsBlocks } from './auth.slate'
 
-export const getNotConnectedSettingsSlate = (): RawSlateDto => {
+export const getNotConnectedSettingsSlate = async (): Promise<RawSlateDto> => {
   return {
     rootBlock: 'root',
     blocks: [
@@ -14,7 +14,7 @@ export const getNotConnectedSettingsSlate = (): RawSlateDto => {
         props: { spacing: 'md' },
         children: ['auth'],
       },
-      ...getAuthSettingsBlocks({
+      ... await getAuthSettingsBlocks({
         id: 'root',
         action: 'Connect',
         actionCallbackId: SettingsBlockCallback.AuthRedirect,

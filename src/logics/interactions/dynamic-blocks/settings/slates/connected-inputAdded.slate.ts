@@ -17,8 +17,9 @@ export const getConnectedSettingsSlate2 = async (options: {
   selectedSpace,
   selectedteam
   teams,
-  channels
+  channels?
   ch
+  token?
 }): Promise<RawSlateDto> => {
   const {
     user,
@@ -27,10 +28,11 @@ export const getConnectedSettingsSlate2 = async (options: {
     selectedteam,
     ch,
     teams,
-    channels
+    channels,
+    token
   } = options
 
-  const accessToken = user.token;
+
   const spacesList = await getSpaces(user.networkId);
   const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
 
@@ -39,7 +41,7 @@ export const getConnectedSettingsSlate2 = async (options: {
   // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel
   const selectedSpaceText = spaces.find(space => space.value === selectedSpace)?.text || '';
   const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || '';
-  const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
+  // const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
   // const card_content = 
   //   {
   //     children: [],
@@ -81,10 +83,11 @@ export const getConnectedSettingsSlate2 = async (options: {
   
     
 
-    ...getAuthSettingsBlocks({
+     ...await getAuthSettingsBlocks({
       teams,
       channels,
       spaces,
+      token,
       childern: ch,
         id: 'adding-teams',
         action: 'Add Teams',
@@ -92,9 +95,9 @@ export const getConnectedSettingsSlate2 = async (options: {
         actionCallbackId: SettingsBlockCallback.OpenModal,
         actionVariant: 'primary',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
-        description: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}`,
+        description: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: `,
       }),
-      ...getAuthSettingsBlocks({
+      ... await getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
         actionCallbackId: SettingsBlockCallback.AuthVoke,

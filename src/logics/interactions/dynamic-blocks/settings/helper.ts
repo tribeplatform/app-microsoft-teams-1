@@ -22,7 +22,7 @@ export const getConnectedSettingsResponse = async (options: {
   } = options
 
   
-  const slate = getConnectedSettingsSlate({
+  const slate = await getConnectedSettingsSlate({
     user,
   })
   return {
@@ -53,10 +53,12 @@ export const withDetails = async (options: InteractionWebhook, user: Network): P
     const selectedChannel = ch[0].channelId
     const selectedSpace = ch[0].spaceIds
     const selectedteam = ch[0].teamId
-    const slates = []
-    const token = await getAppToken(user.networkId, user.networkId, user.tenantId)
-    const teams = await getListOfTeams(token, user.refresh, user.networkId, user.tenantId, user.microsoftId);
-    const channels = await getListOfChannels(token, selectedteam,user.networkId, user.tenantId );
+    const channelsw = []
+    const token = await getAppToken(user.tenantId)
+    const teams = await getListOfTeams(token, user.microsoftId);
+   
+    // const channels = await getListOfChannels(token, selectedteam, );
+
 
   
       const slate = getConnectedSettingsSlate2({
@@ -65,7 +67,8 @@ export const withDetails = async (options: InteractionWebhook, user: Network): P
         selectedSpace,
         selectedteam,
         teams,
-        channels,
+        // channels,
+        token,
         ch
       })
 
@@ -119,7 +122,7 @@ export const getDisconnectedSettingsResponse = async (options: {
         {
           id: interactionId,
           type: InteractionType.Show,
-          slate: rawSlateToDto(slate),
+          slate: rawSlateToDto(await slate),
         },
       ],
     },
@@ -129,21 +132,36 @@ export const getDisconnectedSettingsResponse = async (options: {
 
 
 export const getConnectModalResponse = async (options: {
+  id?: string
+  editMode?: boolean
   user: Network
   spaces?: object;
-  teams: object
-  channels: object
+  teams?: object,
+  channels?: object,
+  team?: object,
+  space?: object,
+  channel?: object
   // interactionId: string
 
 }): Promise<InteractionWebhookResponse> => {
   const {
+    id,
+    editMode,
     spaces,
     teams,
-    channels
+    channels,
+    team,
+    space,
+    channel,
   } = options
-
+  
 
   const slate = getConnectModalSlate({
+    objectId:id,
+    editMode,
+    team,
+    space,
+    channel,
     spaces,
     teams,
     channels

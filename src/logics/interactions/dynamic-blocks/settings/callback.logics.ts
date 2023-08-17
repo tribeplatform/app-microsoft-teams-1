@@ -1,4 +1,4 @@
-import { InteractionType, WebhookStatus, WebhookType } from '@enums'
+import { InteractionType, ToastStatus, WebhookStatus, WebhookType } from '@enums'
 import {
   InteractionInput,
   InteractionWebhook,
@@ -16,7 +16,7 @@ import {
 } from '@/logics/oauth.logic'
 import { ChannelRepository } from '@/repositories/channel.repository'
 import { getNetworkClient } from '@clients'
-import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
+import { rawSlateToDto, slateDtoToRaw } from '@tribeplatform/slate-kit/utils'
 import { globalLogger } from '@utils'
 import { getInteractionNotSupportedError } from '../../../error.logics'
 import { SettingsBlockCallback } from './constants'
@@ -32,6 +32,8 @@ import { getNetworkSettingsInteractionResponse } from './interaction.logics'
 import { type } from 'os'
 import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
 import { send } from 'process'
+import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
+import { deleteModal } from './slates/delete-modal.slate'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -111,7 +113,7 @@ const getOpenModalCallbackResponse = async (
   logger.debug('getConnectCallbackResponse called', { networkId })
 
   const user = await NetworkRepository.findUnique(networkId)
-  const accessToken = user.token
+  const accessToken = await getAppToken(user.tenantId)
 
   const spacesList = await getSpaces(networkId)
 
@@ -119,9 +121,7 @@ const getOpenModalCallbackResponse = async (
 
   const teams = await getListOfTeams(
     accessToken,
-    user.refresh,
-    networkId,
-    user.tenantId,
+
     user.microsoftId,
   )
   console.log('Spaces:', spaces)
@@ -144,14 +144,12 @@ const getFetchChannelsCallbackResponse = async (
   // Your code here to fetch the channels for the selected team and space
   try {
     const user = await NetworkRepository.findUnique(networkId)
-    const accessToken = await getAppToken(user.token, user.networkId, user.tenantId)
+    const accessToken = await getAppToken(user.tenantId)
 
     const spacesList = await getSpaces(networkId)
     const teams = await getListOfTeams(
       accessToken,
-      user.refresh,
-      networkId,
-      user.tenantId,
+
       user.microsoftId,
     )
     const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
@@ -172,12 +170,7 @@ const getFetchChannelsCallbackResponse = async (
       }
     }
 
-    const channels = await getListOfChannels(
-      accessToken,
-      teamId as string,
-      user.networkId,
-      user.tenantId,
-    )
+    const channels = await getListOfChannels(accessToken, teamId as string)
     console.log('Channels:', channels)
     console.log('teams:', teamId)
     console.log('spaces:', spaceId)
@@ -231,6 +224,83 @@ const getFetchChannelsCallbackResponse = async (
     })
   }
 }
+const getFetchChannelsCallbackResponseUpgrade = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const { networkId, data } = options
+  const { teamId, spaceId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+  const callback = data.callbackId as string
+  const id = callback.split('-')[1]
+  // Your code here to fetch the channels for the selected team and space
+  try {
+    const user = await NetworkRepository.findUnique(networkId)
+    const accessToken = await getAppToken(user.tenantId)
+
+    const spacesList = await getSpaces(networkId)
+    const teams = await getListOfTeams(
+      accessToken,
+
+      user.microsoftId,
+    )
+    const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
+
+    for (var i = 0; i < spaces.length; i++) {
+      if (spaces[i].value == spaceId) {
+        let element = spaces[i]
+        spaces.splice(i, 1)
+        spaces.splice(0, 0, element)
+      }
+    }
+
+    for (var i = 0; i < teams.length; i++) {
+      if (teams[i].value == teamId) {
+        let element = teams[i]
+        teams.splice(i, 1)
+        teams.splice(0, 0, element)
+      }
+    }
+    console.log('errrrroorororororor')
+    const channels = await getListOfChannels(accessToken, teamId as string)
+    console.log('Channels:', channels)
+    console.log('teams:', teamId)
+    console.log('spaces:', spaceId)
+
+    // Now that you have the channels, update the slate with the new items for the channels dropdown
+    const updatedModalSlate = getConnectModalSlate({
+      objectId: id,
+      upgradeMode: true,
+      spaces: spaces,
+      teams: teams,
+      channels: channels,
+      showTeams: true,
+    })
+
+    return {
+      type: WebhookType.Interaction,
+      status: WebhookStatus.Succeeded,
+      data: {
+        interactions: [
+          {
+            id: data.interactionId,
+            type: InteractionType.Show,
+            slate: rawSlateToDto(updatedModalSlate),
+          },
+        ],
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching channels:', error)
+    // Handle the error in some way, e.g., show an error toast to the user
+    return getOpenToastCallbackResponse({
+      networkId: networkId,
+      data: {
+        interactionId: data.interactionId,
+        title: 'Error',
+        description: 'Error',
+      },
+    })
+  }
+}
 
 const handleSaveButtonClick = async (
   options: InteractionWebhook,
@@ -238,7 +308,21 @@ const handleSaveButtonClick = async (
   const { networkId, data } = options
   const { spaceId: spaces, teamId: teams, channelId } = data.inputs
   console.log('hi', data.inputs)
+  const channelReps = await ChannelRepository.findMany()
   try {
+    for (var i = 0; i < channelReps.length; i++) { 
+      if(channelReps[i].channelId == channelId&&channelReps[i].teamId == teams&& channelReps[i].spaceIds == spaces){
+        return getOpenToastCallbackResponse({
+          networkId: networkId,
+          data: {
+            interactionId: data.interactionId,
+            title: 'Error',
+            description: 'Error saving data, this channel is already connected',
+          },
+        })
+      }
+      }
+      
     // Save the user's selections in the database, along with other existing fields
     console.log('hi', teams)
     await ChannelRepository.create({
@@ -259,17 +343,17 @@ const handleSaveButtonClick = async (
       console.error('Error installing bot:', e)
       // Handle the error in some way, e.g., show an error toast to the user
       if (e.response.status == 409) {
-      //   return getOpenToastCallbackResponse({
-      //     networkId: networkId,
-      //     data: {
-      //       interactionId: data.interactionId,
-      //       title: 'Error',
-      //       description: 'bot already exists!',
-      //     },
-      //   })
-      // }
+        //   return getOpenToastCallbackResponse({
+        //     networkId: networkId,
+        //     data: {
+        //       interactionId: data.interactionId,
+        //       title: 'Error',
+        //       description: 'bot already exists!',
+        //     },
+        //   })
+        // }
+      }
     }
-  }
     try {
       //  sendProactiveMessage('Hello amir', [channelId as string])
     } catch (e) {
@@ -308,7 +392,96 @@ const handleSaveButtonClick = async (
     })
   }
 }
+const handleUpdateButtonClick = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const { networkId, data } = options
+  const { spaceId: spaces, teamId: teams, channelId } = data.inputs
+  console.log('hi', data.inputs)
+  const callback = data.callbackId as string
+  const id = callback.split('-')[1]
+  const channelReps = await ChannelRepository.findMany()
+  try {
+    for (var i = 0; i < channelReps.length; i++) { 
+      if(channelReps[i].channelId == channelId&&channelReps[i].teamId == teams&& channelReps[i].spaceIds == spaces){
+        return getOpenToastCallbackResponse({
+          networkId: networkId,
+          data: {
+            interactionId: data.interactionId,
+            title: 'Error',
+            description: 'Error saving data, this channel is already connected',
+          },
+        })
+      }
+      }
 
+    await ChannelRepository.update(id, {
+      spaceIds: spaces as string,
+      teamId: teams as string,
+      channelId: channelId as string,
+    })
+
+    // const network = await NetworkRepository.findUnique(networkId)
+
+    const user = await NetworkRepository.findUnique(networkId)
+    // return getConnectedSettingsResponse(options.data, network)
+    // const updateSlate = getConnectedSettingsSlate2()
+
+    try {
+      await installingBotTeams(networkId, user.token, teams, user.tenantId)
+    } catch (e) {
+      console.error('Error installing bot:', e)
+      // Handle the error in some way, e.g., show an error toast to the user
+      if (e.response.status == 409) {
+        //   return getOpenToastCallbackResponse({
+        //     networkId: networkId,
+        //     data: {
+        //       interactionId: data.interactionId,
+        //       title: 'Error',
+        //       description: 'bot already exists!',
+        //     },
+        //   })
+        // }
+      }
+    }
+    try {
+      //  sendProactiveMessage('Hello amir', [channelId as string])
+    } catch (e) {
+      console.log(e)
+    }
+
+    return {
+      type: WebhookType.Interaction,
+      status: WebhookStatus.Succeeded,
+      data: {
+        interactions: [
+          {
+            id: data.interactionId,
+            type: InteractionType.Close,
+          },
+          {
+            id: data.interactionId + 'reaload',
+            type: InteractionType.Reload,
+            props: {
+              dynamicBlockKeys: ['settings'],
+            },
+          },
+        ],
+      },
+    }
+  } catch (error) {
+    console.error('Error saving data:', error)
+    // Handle the error in some way, e.g., show an error toast to the user
+    return getOpenToastCallbackResponse({
+      networkId: networkId,
+      data: {
+        interactionId: data.interactionId,
+        title: 'Error',
+        description: 'Error saving data',
+      },
+    })
+  }
+}
 const getRedirectCallbackResponse = async (options: {
   network: Network
   data: InteractionInput<Network>
@@ -328,6 +501,103 @@ const getRedirectCallbackResponse = async (options: {
     ],
   },
 })
+const handleDeleteBlockSure = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const {
+    networkId,
+    data: { callbackId, interactionId, inputs },
+  } = options
+  console.log('hi', options)
+  const callback = callbackId as string
+  const id = callback.split('-')[1]
+  await ChannelRepository.delete(id)
+
+  return {
+    type: WebhookType.Interaction,
+    status: WebhookStatus.Succeeded,
+    data: {
+      interactions: [
+        {
+          id: interactionId,
+          type: InteractionType.Close,
+        },
+        {
+          id: interactionId + 'reaload',
+          type: InteractionType.Reload,
+          props: {
+            dynamicBlockKeys: ['settings'],
+          },
+        },
+      ],
+    },
+  }
+}
+const handleDeleteBlock = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const {
+    networkId,
+    data: { callbackId, interactionId, inputs },
+  } = options
+  const callback = callbackId as string
+  const id = callback.split('-')[1]
+  const slate = deleteModal({ id: id })
+  return {
+    type: WebhookType.Interaction,
+    status: WebhookStatus.Succeeded,
+    data: {
+      interactions: [
+        {
+          // id: options.interactionId,
+          id: 'connect to channels',
+          type: InteractionType.OpenModal,
+          props: {
+            size: 'md',
+            title: 'Delete',
+          },
+          slate: rawSlateToDto(await slate),
+        },
+      ],
+    },
+  }
+}
+const handleEditBlock = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const {
+    networkId,
+    data: { callbackId, interactionId, inputs },
+  } = options
+
+  const callback = callbackId as string
+  const id = callback.split('-')[1]
+  console.log('id', id)
+  const user = await ChannelRepository.findUnique(id)
+  const userRep = await NetworkRepository.findUnique(networkId)
+  const token = await getAppToken(userRep.tenantId)
+  const spaces = await getSpaces(networkId)
+  const space = spaces.find(space => (user.spaceIds == space.id ? space : null))
+  const teams = await getListOfTeams(token, userRep.microsoftId)
+  const team = teams.find(team => user.teamId == team.value)
+  const channels = await getListOfChannels(token, team.value)
+  const channel = channels.find(channel => user.channelId == channel.value)
+  const spacesMap = spaces.map(space => ({ value: space.id, text: space.name }))
+  const spaceMap = { value: space.id, text: space.name }
+  console.log('space ', space, 'team ', team, 'channel ', channel)
+
+  return getConnectModalResponse({
+    id,
+    spaces: spacesMap,
+    teams,
+    channels,
+    editMode: true,
+    user: userRep,
+    space: spaceMap, // Pass the spaces dictionary to the 'spaces' parameter in getConnectModalResponse
+    team: team,
+    channel: channel,
+  })
+}
 
 export const getCallbackResponse = async (
   options: InteractionWebhook,
@@ -343,6 +613,17 @@ export const getCallbackResponse = async (
   // if (callbackId === 'modal_submit') {
   //   return handleModalSubmit(networkId, formData);
   // }
+  if (callbackId.includes('edit')) {
+    return handleEditBlock(options)
+  } else if (callbackId.includes('delete')) {
+    return handleDeleteBlock(options)
+  } else if (callbackId.includes('removeBlock')) {
+    return handleDeleteBlockSure(options)
+  } else if (callbackId.includes('updateBlock')) {
+    return handleUpdateButtonClick(options)
+  } else if (callbackId.includes('upgrade')) {
+    return getFetchChannelsCallbackResponseUpgrade(options)
+  }
   switch (callbackId) {
     case SettingsBlockCallback.AuthVoke:
       return getAuthRevokeCallbackResponse(options)
@@ -355,6 +636,7 @@ export const getCallbackResponse = async (
     case SettingsBlockCallback.AuthRedirect:
       // return getRedirectCallbackResponse(options)
       return getAuthRedirectCallbackResponse(options)
+
     default:
       return getInteractionNotSupportedError('callbackId', callbackId)
   }

@@ -5,7 +5,7 @@ import axios from 'axios';
 import { get } from 'http';
 
 // Function to get the list of teams using the access token
-export const getListOfTeams = async (accessToken: string, refreshToken, networkId, tenantId,id) => {
+export const getListOfTeams = async (accessToken: string,id) => {
   try {
     const response = await axios.get('https://graph.microsoft.com/v1.0/users/'+id+'/joinedTeams', {
       headers: {
@@ -23,7 +23,7 @@ export const getListOfTeams = async (accessToken: string, refreshToken, networkI
     return Teamdictionary;
   } catch (error) {
     console.error('Error fetching teams:', error);
-    RefreshTokenClient(refreshToken, networkId)
+
     // You can handle the error in the calling function
   }
 };
@@ -50,7 +50,7 @@ export const getSpaces = async (networkId: string) => {
 }
 
 
-export const getListOfChannels = async (accessToken: string, teamId: string, networkId, tenantId) => {
+export const getListOfChannels = async (accessToken: string, teamId: string) => {
   try {
     const response = await axios.get(`https://graph.microsoft.com/v1.0/teams/${teamId}/channels`, {
       headers: {
@@ -69,7 +69,7 @@ export const getListOfChannels = async (accessToken: string, teamId: string, net
 
     return channelsdictionary;
   } catch (error) {
-    console.error('Error fetching channels:');
+    console.error('Error fetching channels:', error);
   }
 };
 

@@ -87,7 +87,7 @@ export const getTenantId = async (token, endpoint, networkId) => {
   }
 }
 
-export const getAppToken = async (token, networkId, tenantId) => {
+export const getAppToken = async (tenantId) => {
   const tokenRequest = {
     scopes: [MICROSOFT_ENDPOINT + '.default'], // e.g. ‘https://graph.microsoft.com/.default’
   }
@@ -112,7 +112,7 @@ export const installingBotUser = async (networkId, token, microsfotID, tenantId)
   const options = {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${await getAppToken(token, networkId, tenantId)}`,
+      Authorization: `Bearer ${await getAppToken(tenantId)}`,
     },
   }
   const data = {
@@ -134,7 +134,7 @@ export const installingBotTeams = async (networkId, token, teamId, tenantId) => 
   const options = {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${await getAppToken(token, networkId, tenantId)}`,
+      Authorization: `Bearer ${await getAppToken(tenantId)}`,
     },
   }
   const data = {

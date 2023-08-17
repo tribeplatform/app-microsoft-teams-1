@@ -2,6 +2,7 @@ import { NetworkRepository } from "@repositories";
 import { getListOfTeams } from "./microsoft-info.logic";
 
 export enum SettingsBlockCallback {
+  Update = 'updateBlock',
   Save = 'save',
   ModalSave = 'modal-save',
   OpenModal = 'open-modal',

@@ -7,32 +7,32 @@ export const ChannelRepository = {
     return client.channel.create({ data })
   },
   update: (
-    networkId: string,
+    id: string,
     data: Prisma.ChannelUpdateArgs['data'],
   ): Promise<Channel> => {
-    return client.channel.update({ where: { networkId }, data })
+    return client.channel.update({ where: { id }, data })
   },
   upsert: (
-    networkId: string,
+    id: string,
     data: Omit<Prisma.ChannelCreateArgs['data'], 'networkId'>,
   ): Promise<Channel> => {
     return client.channel.upsert({
-      create: { networkId, ...data },
+      create: { id, ...data },
       update: data,
-      where: { networkId },
+      where: { id },
     })
   },
-  delete: (networkId: string): Promise<Channel> => {
-    return client.channel.delete({ where: { networkId } })
+  delete: (id: string): Promise<Channel> => {
+    return client.channel.delete({ where: { id } })
   },
   findMany: (args?: Prisma.ChannelFindManyArgs): Promise<Channel[]> => {
     return client.channel.findMany(args)
   },
-  findUniqueOrThrow: (networkId: string): Promise<Channel> => {
-    return client.channel.findUniqueOrThrow({ where: { networkId } })
+  findUniqueOrThrow: (id: string): Promise<Channel> => {
+    return client.channel.findUniqueOrThrow({ where: { id } })
   },
-  findUnique: (networkId: string): Promise<Channel> => {
-    return client.channel.findUnique({ where: { networkId } })
+  findUnique: (id: string): Promise<Channel> => {
+    return client.channel.findUnique({ where: { id } })
   },
 
 

@@ -3,16 +3,21 @@ import { RawSlateDto } from '@tribeplatform/slate-kit/dtos';
 import { SettingsBlockCallback } from '../constants';
 
 export const getConnectModalSlate = (options?: {
+  objectId?: string;
+  upgradeMode?: boolean;
   showEnvPicker?: true;
   spaces?: object;
   teams?: object;
   channels?: object; // Add channels option
   showTeams?: boolean;
+  editMode?: boolean;
+  team?: object;
+  space?: object;
+  channel?: object;
 
 
 }): RawSlateDto => {
-  const teamTest = {value:111, text: 'test'};
-  const { spaces, teams, channels, showTeams } = options || {};
+  const { spaces, teams, channels, showTeams, editMode, team, channel, space, objectId, upgradeMode } = options || {};
 
   const id = Math.floor(Math.random() * Date.now()).toString(36)
   return {
@@ -22,15 +27,23 @@ export const getConnectModalSlate = (options?: {
         id: id,
         name: 'Form',
         props: {
-          callbackId: SettingsBlockCallback.SaveModal,
+          callbackId: (editMode || upgradeMode)? SettingsBlockCallback.Update +"-"+objectId :SettingsBlockCallback.SaveModal,
 
+         
+          defaultValues: editMode ? {
+            teamId: team.value,
+            spaceId: space.value,
+            channelId: channel.value,
+          } : {
 
-          defaultValues: {
-
-        
+            
             teamId: showTeams ? teams[0].value : [],
-            spaceId: spaces[0].value
-          },
+            spaceId: spaces[0].value,
+            
+          
+        },
+        
+        
   
           spacing: 'md',
         },
@@ -57,7 +70,7 @@ export const getConnectModalSlate = (options?: {
         id: 'auth.teamId',
         name: 'Select',
         props: {
-          callbackId: SettingsBlockCallback.FetchChannels,
+          callbackId:editMode ? "upgrade-"+objectId : SettingsBlockCallback.FetchChannels,
 
           name: 'teamId',
           label: 'Team',
@@ -75,15 +88,15 @@ export const getConnectModalSlate = (options?: {
           required: true,
         },
       },
-      
+
       {
         id: 'auth.save',
         name: 'Button',
         props: {
-          callbackId: SettingsBlockCallback.SaveModal, // Callback ID for the "Save" button
+          callbackId: (editMode || upgradeMode) ? SettingsBlockCallback.Update +"-"+objectId : SettingsBlockCallback.SaveModal, // Callback ID for the "Save" button
           type: 'submit', // You can use 'submit' if it's a form submit button
-          variant: 'primary',
-          text: 'Save',
+          variant: (editMode || upgradeMode) ? 'basic' : 'primary',
+          text: (editMode || upgradeMode) ? 'Update' : 'Save',
         },
       },
       {

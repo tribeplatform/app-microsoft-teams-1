@@ -9,11 +9,11 @@ import { getAuthSettingsBlocks } from './auth.slate'
 // import { getChanelIntegrationBlocks } from './chanel-integration.slate'
 
 
-export const getConnectedSettingsSlate = (options: {
+export const getConnectedSettingsSlate = async (options: {
   user: Network,
   
 
-}): RawSlateDto => {
+}): Promise<RawSlateDto> => {
   const {
     user,
 
@@ -28,7 +28,7 @@ export const getConnectedSettingsSlate = (options: {
         props: { spacing: 'md' },
         children: ['chanels-integration', 'adding-teams', 'auth'],
       },
-    ...getAuthSettingsBlocks({
+    ...await getAuthSettingsBlocks({
         id: 'adding-teams',
         action: 'Add Teams',
         title: 'Teams channels',
@@ -37,13 +37,13 @@ export const getConnectedSettingsSlate = (options: {
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description:"Add your Teams's channels                                     "
       }),
-      ...getAuthSettingsBlocks({
+      ...await getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
         actionCallbackId: SettingsBlockCallback.AuthVoke,
         actionVariant: 'danger',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
-        description: `Connected by [${user.name}] on ${moment(user.createdAt).format(
+        description: `Connected on ${moment(user.createdAt).format(
           'MMMM Do YYYY, h:mm a',
         )}<br>By revoking access, you will lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,
       }),
