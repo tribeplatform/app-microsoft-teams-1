@@ -76,9 +76,9 @@ export const getConnectedSettingsSlate2 = async (options: {
       {
         id: 'channels',
         name: 'Card',
-        children: ['all-channels'],
+        children: ['all-channels',],
       },
-
+    
       
   
     

@@ -146,10 +146,11 @@ export const installingBotTeams = async (networkId, token, teamId, tenantId) => 
   const response = await axios.post(endpoint, data, options)
   console.log('installing status', response.status)
 }
-export const sendProactiveMessage = async (message: string, channels: string[]) => {
+export const sendProactiveMessage = async (message: string, channels: string[], url?) => {
   const options = {
     message: message,
     channelIds: channels,
+    url,
   }
   const endpoint = 'http://localhost:3978/api/notification'
   

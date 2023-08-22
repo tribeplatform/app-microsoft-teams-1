@@ -98,6 +98,7 @@ const getAuthRevokeCallbackResponse = async (
   } = options
   try {
     await NetworkRepository.delete(networkId)
+    await ChannelRepository.deleteMany()
   } catch (error) {
     logger.error(error)
     // return getServiceUnavailableError(webhook)
@@ -139,7 +140,7 @@ const getFetchChannelsCallbackResponse = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { teamId, spaceId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+  const { teamId, spaceId,  } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
 
   // Your code here to fetch the channels for the selected team and space
   try {
@@ -176,7 +177,7 @@ const getFetchChannelsCallbackResponse = async (
     console.log('spaces:', spaceId)
 
     // Now that you have the channels, update the slate with the new items for the channels dropdown
-    const updatedModalSlate = getConnectModalSlate({
+    const updatedModalSlate = await getConnectModalSlate({
       spaces: spaces,
       teams: teams,
       channels: channels,
@@ -228,7 +229,7 @@ const getFetchChannelsCallbackResponseUpgrade = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { teamId, spaceId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+  const { teamId, spaceId,  } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
   const callback = data.callbackId as string
   const id = callback.split('-')[1]
   // Your code here to fetch the channels for the selected team and space
@@ -266,7 +267,7 @@ const getFetchChannelsCallbackResponseUpgrade = async (
     console.log('spaces:', spaceId)
 
     // Now that you have the channels, update the slate with the new items for the channels dropdown
-    const updatedModalSlate = getConnectModalSlate({
+    const updatedModalSlate = await getConnectModalSlate({
       objectId: id,
       upgradeMode: true,
       spaces: spaces,
@@ -306,12 +307,30 @@ const handleSaveButtonClick = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { spaceId: spaces, teamId: teams, channelId } = data.inputs
+  const {
+    spaceId: spaces,
+    teamId: teams,
+    channelId,
+    post,
+    modarationCreated,
+    modarationRejected,
+    memberInvitionAccepted,
+    spaceMemberDeleted,
+    spaceMemberCreated,
+    spaceJoinRequestCreated,
+    spaceJoinRequestAccepted,
+    modarationAccepted,
+    memberVerified
+  } = data.inputs
   console.log('hi', data.inputs)
   const channelReps = await ChannelRepository.findMany()
   try {
-    for (var i = 0; i < channelReps.length; i++) { 
-      if(channelReps[i].channelId == channelId&&channelReps[i].teamId == teams&& channelReps[i].spaceIds == spaces){
+    for (var i = 0; i < channelReps.length; i++) {
+      if (
+        channelReps[i].channelId == channelId &&
+        channelReps[i].teamId == teams &&
+        channelReps[i].spaceIds == spaces
+      ) {
         return getOpenToastCallbackResponse({
           networkId: networkId,
           data: {
@@ -321,8 +340,8 @@ const handleSaveButtonClick = async (
           },
         })
       }
-      }
-      
+    }
+
     // Save the user's selections in the database, along with other existing fields
     console.log('hi', teams)
     await ChannelRepository.create({
@@ -330,6 +349,16 @@ const handleSaveButtonClick = async (
       spaceIds: spaces as string,
       teamId: teams as string,
       channelId: channelId as string,
+      post: post as boolean,
+      modarationCreated: modarationCreated as boolean,
+      modarationRejected: modarationRejected as boolean,
+      memberInvitionAccepted: memberInvitionAccepted as boolean,
+      spaceMemberDeleted: spaceMemberDeleted as boolean,
+      spaceMemberCreated: spaceMemberCreated as boolean,
+      spaceJoinRequestCreated: spaceJoinRequestCreated as boolean,
+      spaceJoinRequestAccepted: spaceJoinRequestAccepted as boolean,
+      memberVerified: memberVerified as boolean,
+      modarationAccepted: modarationAccepted as boolean,
     })
     // const network = await NetworkRepository.findUnique(networkId)
 
@@ -355,6 +384,8 @@ const handleSaveButtonClick = async (
       }
     }
     try {
+      const title = 'Community Bot is connected!'
+      const message = 'Hi there, *Community Bot* is here! I would inform you on community updates in this channel.'
       //  sendProactiveMessage('Hello amir', [channelId as string])
     } catch (e) {
       console.log(e)
@@ -396,29 +427,53 @@ const handleUpdateButtonClick = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { spaceId: spaces, teamId: teams, channelId } = data.inputs
+  const { spaceId: spaces, teamId: teams, channelId,
+    post,
+    modarationCreated,
+    modarationRejected,
+    memberInvitionAccepted,
+    spaceMemberDeleted,
+    spaceMemberCreated,
+    spaceJoinRequestCreated,
+    spaceJoinRequestAccepted,
+    modarationAccepted,
+    memberVerified } = data.inputs
   console.log('hi', data.inputs)
   const callback = data.callbackId as string
   const id = callback.split('-')[1]
   const channelReps = await ChannelRepository.findMany()
   try {
-    for (var i = 0; i < channelReps.length; i++) { 
-      if(channelReps[i].channelId == channelId&&channelReps[i].teamId == teams&& channelReps[i].spaceIds == spaces){
-        return getOpenToastCallbackResponse({
-          networkId: networkId,
-          data: {
-            interactionId: data.interactionId,
-            title: 'Error',
-            description: 'Error saving data, this channel is already connected',
-          },
-        })
-      }
-      }
+    // for (var i = 0; i < channelReps.length; i++) {
+    //   if (
+    //     channelReps[i].channelId == channelId &&
+    //     channelReps[i].teamId == teams &&
+    //     channelReps[i].spaceIds == spaces
+    //   ) {
+    //     return getOpenToastCallbackResponse({
+    //       networkId: networkId,
+    //       data: {
+    //         interactionId: data.interactionId,
+    //         title: 'Error',
+    //         description: 'Error saving data, this channel is already connected',
+    //       },
+    //     })
+    //   }
+    // }
 
     await ChannelRepository.update(id, {
       spaceIds: spaces as string,
       teamId: teams as string,
       channelId: channelId as string,
+      post: post as boolean,
+      modarationCreated: modarationCreated as boolean,
+      modarationRejected: modarationRejected as boolean,
+      memberInvitionAccepted: memberInvitionAccepted as boolean,
+      spaceMemberDeleted: spaceMemberDeleted as boolean,
+      spaceMemberCreated: spaceMemberCreated as boolean,
+      spaceJoinRequestCreated: spaceJoinRequestCreated as boolean,
+      spaceJoinRequestAccepted: spaceJoinRequestAccepted as boolean,
+      memberVerified: memberVerified as boolean,
+      modarationAccepted: modarationAccepted as boolean,
     })
 
     // const network = await NetworkRepository.findUnique(networkId)

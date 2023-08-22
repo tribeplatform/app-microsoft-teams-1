@@ -1,4 +1,6 @@
 import { Channel, Prisma, PrismaClient } from '@prisma/client'
+import { promises } from 'dns'
+import { Batch } from 'mongodb'
 
 const client = new PrismaClient()
 
@@ -28,15 +30,15 @@ export const ChannelRepository = {
   findMany: (args?: Prisma.ChannelFindManyArgs): Promise<Channel[]> => {
     return client.channel.findMany(args)
   },
+  deleteMany: (args?: Prisma.ChannelDeleteManyArgs): Promise<any> => {
+    return client.channel.deleteMany(args)
+  },
   findUniqueOrThrow: (id: string): Promise<Channel> => {
     return client.channel.findUniqueOrThrow({ where: { id } })
   },
   findUnique: (id: string): Promise<Channel> => {
     return client.channel.findUnique({ where: { id } })
   },
-
-
-
 
   
 }

@@ -156,7 +156,7 @@ export const getConnectModalResponse = async (options: {
   } = options
   
 
-  const slate = getConnectModalSlate({
+  const slate = await getConnectModalSlate({
     objectId:id,
     editMode,
     team,
