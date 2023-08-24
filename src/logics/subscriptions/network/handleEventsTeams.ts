@@ -1,34 +1,5 @@
 import { sendProactiveMessage } from '@/logics/oauth.logic'
 
-export const handlePostCreated = async (name, url, title, channels): Promise<void> => {
-  const message = `${name} added a post with the title ${title}!`
-  await sendProactiveMessage(message, channels, url)
-}
-
-export const memberShipSpace = async (
-  messag: any,
-  self,
-  mode,
-  channels,
-): Promise<void> => {
-  let message
-  if (mode == 'created') {
-    if (self == true) {
-      message = `${messag.member} joined ${messag.space}`
-    } else {
-      message = `${messag.actor} added ${messag.member} to ${messag.space} `
-    }
-    await sendProactiveMessage(message, channels)
-  } else if (mode == 'deleted') {
-    if (self == true) {
-      message = `${messag.member} left ${messag.space}`
-    } else {
-      message = `${messag.actor} removed ${messag.member} from ${messag.space}`
-    }
-    await sendProactiveMessage(message, channels)
-  }
-}
-
 export const modration = async (messag: any, mode, url, channels): Promise<void> => {
   if (mode == 'created') {
     const message = `${messag.member} was flagged for moderation`

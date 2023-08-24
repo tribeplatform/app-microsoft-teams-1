@@ -64,6 +64,12 @@ export interface EventTarget {
 }
 
 export interface BaseEventObject {
+  isReply: any
+  title: any
+  url: any
+  spaceId: string
+  inviteeEmail: any
+  name: any
   id: string
 }
 

@@ -148,6 +148,7 @@ export const installingBotTeams = async (networkId, token, teamId, tenantId) => 
 }
 export const sendProactiveMessage = async (message: string, channels: string[], url?, title?) => {
   const options = {
+    
     message: message,
     channelIds: channels,
     url: url ? url : null,
