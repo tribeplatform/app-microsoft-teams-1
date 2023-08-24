@@ -4,18 +4,6 @@ import { EventNoun, EventVerb } from '@tribeplatform/gql-client/global-types'
 import { Member, Network, Post } from '@tribeplatform/gql-client/types'
 import { globalLogger } from '@utils'
 import { handleNetworkSubscription } from './network'
-import {
-  handlePostCreated,
-  memberInvitation,
-  memberShipSpace,
-  memberVerified,
-  modration,
-  spaceJoinRequest,
-} from './network/handleEventsTeams'
-import { ChannelRepository } from '@/repositories/channel.repository'
-import { getSpaces } from '../interactions/dynamic-blocks/settings/microsoft-info.logic'
-import { NetworkRepository } from '@repositories'
-import { getNetworkClient } from '@clients'
 import { handlePostSubscription } from './post'
 import { handleMemberSubscription } from './member'
 import { handleSpaceMembershipSubscription } from './space-membership'
