@@ -4,9 +4,8 @@ import { Post } from '@tribeplatform/gql-client/types'
 import { globalLogger } from '@utils'
 import { Types } from '@tribeplatform/gql-client'
 import { getNetworkClient } from '@clients'
-import { getMember, getPost, getSpace } from '../helper'
+import { getMember, getPost, getSpace, sendProactiveMessage } from '../helper'
 import { ChannelRepository } from '@/repositories/channel.repository'
-import { sendProactiveMessage } from '@/logics/oauth.logic'
 const logger = globalLogger.setContext(`NetworkSubscription`)
 
 export const handlePostSubscription = async (

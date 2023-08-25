@@ -1,10 +1,10 @@
 import { SubscriptionWebhook } from '@interfaces'
 import { EventVerb } from '@tribeplatform/gql-client/global-types'
 import { globalLogger } from '@utils'
-import { getMember } from '../helper'
+import { getMember, sendProactiveMessage } from '../helper'
 import { getNetworkClient } from '@clients'
 import { ChannelRepository } from '@/repositories/channel.repository'
-import { sendProactiveMessage } from '@/logics/oauth.logic'
+
 import { Types } from '@tribeplatform/gql-client'
 const logger = globalLogger.setContext(`NetworkSubscription`)
 export const handleMemberInvitaionSubscription = async (

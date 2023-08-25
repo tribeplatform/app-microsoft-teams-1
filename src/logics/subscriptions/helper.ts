@@ -1,3 +1,4 @@
+import axios from "axios";
 
 export const getSpace = async ( tribeClient ,spaceId: string) => {
     const space = await tribeClient.spaces.get({ id: spaceId }, 'all');
@@ -12,3 +13,17 @@ export const getPost = async ( tribeClient ,postId: string) => {
     return post;
 }
 
+export const sendProactiveMessage = async (message: string, channels: string[], url?, title?) => {
+  const options = {
+    
+    message: message,
+    channelIds: channels,
+    url: url ? url : null,
+    title: title ? title : null,
+  }
+  const endpoint = 'http://localhost:3978/api/notification'
+  
+    const response = await axios.post(endpoint, options)
+    console.log('message status', response.status)
+
+}

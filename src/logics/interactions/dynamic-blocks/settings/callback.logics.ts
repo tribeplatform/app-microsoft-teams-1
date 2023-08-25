@@ -1,4 +1,4 @@
-import { InteractionType, ToastStatus, WebhookStatus, WebhookType } from '@enums'
+import { InteractionType, WebhookStatus, WebhookType } from '@enums'
 import {
   InteractionInput,
   InteractionWebhook,
@@ -12,27 +12,20 @@ import {
   getAppToken,
   getConnectMicrosoftUrl,
   installingBotTeams,
-  sendProactiveMessage,
 } from '@/logics/oauth.logic'
 import { ChannelRepository } from '@/repositories/channel.repository'
 import { getNetworkClient } from '@clients'
-import { rawSlateToDto, slateDtoToRaw } from '@tribeplatform/slate-kit/utils'
+import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
 import { globalLogger } from '@utils'
 import { getInteractionNotSupportedError } from '../../../error.logics'
 import { SettingsBlockCallback } from './constants'
 import {
   getConnectModalResponse,
-  getConnectedSettingsResponse,
   getDisconnectedSettingsResponse,
   getOpenToastCallbackResponse,
 } from './helper'
 import { getListOfChannels, getListOfTeams, getSpaces } from './microsoft-info.logic'
 import { getConnectModalSlate } from './slates/connect-modal.slate'
-import { getNetworkSettingsInteractionResponse } from './interaction.logics'
-import { type } from 'os'
-import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
-import { send } from 'process'
-import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 import { deleteModal } from './slates/delete-modal.slate'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
