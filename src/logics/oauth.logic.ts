@@ -35,7 +35,8 @@ export const connectToMicrosoft = async (options: {
     MICROSOFT_ENDPOINT + 'v1.0/organization',
     networkId,
   )
-  await installingBotUser(networkId, token, microsoftId,tenantId)
+  console.log("here is tenant d: ", tenantId)
+  // await installingBotUser(networkId, token, microsoftId,tenantId)
   await NetworkRepository.upsert(networkId, {
     memberId: actorId,
     userId: String(user_id),

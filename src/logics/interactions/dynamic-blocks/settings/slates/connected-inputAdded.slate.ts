@@ -39,7 +39,8 @@ export const getConnectedSettingsSlate2 = async (options: {
   // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel
   const selectedSpaceText = spaces.find(space => space.value === selectedSpace)?.text || '';
   const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || '';
-  const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
+  // const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
+  const selectedChannelText = ' masih'
   // const card_content = 
   //   {
   //     children: [],
@@ -87,19 +88,17 @@ export const getConnectedSettingsSlate2 = async (options: {
       spaces,
       childern: ch,
         id: 'adding-teams',
-        action: 'Add Teams',
+        action: 'Add Connection',
         title: 'Teams channels',
         actionCallbackId: SettingsBlockCallback.OpenModal,
         actionVariant: 'primary',
-        // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
-        description: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}`,
+        description: '',
       }),
       ...getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
-        actionCallbackId: SettingsBlockCallback.AuthVoke,
+        actionCallbackId: SettingsBlockCallback.RevokeModal,
         actionVariant: 'danger',
-        // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description: `Connected on ${moment(user.createdAt).format(
           'MMMM Do YYYY, h:mm a',
         )}<br>By revoking access, you will lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,

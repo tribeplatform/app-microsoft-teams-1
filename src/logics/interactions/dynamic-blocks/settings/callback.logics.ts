@@ -32,6 +32,7 @@ import { getNetworkSettingsInteractionResponse } from './interaction.logics'
 import { type } from 'os'
 import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
 import { send } from 'process'
+import { RevokeModal } from './slates/Revoke-Modal.slate'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -104,6 +105,33 @@ const getAuthRevokeCallbackResponse = async (
   return getDisconnectedSettingsResponse({ interactionId })
 }
 
+const getOpenModalRevokeCallbackResponse = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const { networkId, data } = options
+
+  const slate = RevokeModal()
+  return {
+    type: WebhookType.Interaction,
+    status: WebhookStatus.Succeeded,
+    data: {
+      interactions: [
+        {
+          // id: options.interactionId,
+          id: 'connect to channels',
+          type: InteractionType.OpenModal,
+          props: {
+            size: 'md',
+            title: 'Revoke',
+          },
+          slate: rawSlateToDto(await slate),
+        },
+      ],
+    },
+  }
+}
+
+
 const getOpenModalCallbackResponse = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
@@ -144,7 +172,9 @@ const getFetchChannelsCallbackResponse = async (
   // Your code here to fetch the channels for the selected team and space
   try {
     const user = await NetworkRepository.findUnique(networkId)
+    console.log("tenant Id:", user.tenantId)
     const accessToken = await getAppToken(user.token, user.networkId, user.tenantId)
+    
 
     const spacesList = await getSpaces(networkId)
     const teams = await getListOfTeams(
@@ -254,7 +284,7 @@ const handleSaveButtonClick = async (
     // const updateSlate = getConnectedSettingsSlate2()
 
     try {
-      await installingBotTeams(networkId, user.token, teams, user.tenantId)
+      // await installingBotTeams(networkId, user.token, teams, user.tenantId)
     } catch (e) {
       console.error('Error installing bot:', e)
       // Handle the error in some way, e.g., show an error toast to the user
@@ -344,6 +374,8 @@ export const getCallbackResponse = async (
   //   return handleModalSubmit(networkId, formData);
   // }
   switch (callbackId) {
+    case SettingsBlockCallback.RevokeModal:
+      return getOpenModalRevokeCallbackResponse(options)
     case SettingsBlockCallback.AuthVoke:
       return getAuthRevokeCallbackResponse(options)
     case SettingsBlockCallback.OpenModal:

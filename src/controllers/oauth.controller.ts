@@ -1,9 +1,9 @@
+import { connectToMicrosoft } from '@/logics/oauth.logic'
+import { consumerExtractorMiddleware, middleMicrosoft } from '@middlewares'
 import { globalLogger } from '@utils'
+import { Request, Response } from 'express'
 import { Controller, Get, HttpCode, Req, Res, UseBefore } from 'routing-controllers'
 import { OpenAPI } from 'routing-controllers-openapi'
-import { Request, Response } from 'express'
-import { middleMicrosoft, consumerExtractorMiddleware } from '@middlewares'
-import { connectToMicrosoft } from '@/logics/oauth.logic'
 // import { redirect } from '@middlewares'
 @Controller('/oauth')
 export class OAuthController {
@@ -29,7 +29,9 @@ export class OAuthController {
       authInfo: request.user,
       state: request.state,
     })
-    response.redirect("https://login.microsoftonline.com/organizations/adminconsent?client_id=9cb2f679-0667-4d7d-861b-31d2b935916f")
+    response.redirect("https://login.microsoftonline.com/organizations/adminconsent?client_id=071cabf4-ed93-4d87-ad6a-1ad0cba2c1bf")
+    // response.redirect("https://internship2023.bettermode.io/manage/apps/microsoft-teams")
+
     // response.redirect(request.state.redirectUrl)
     return response
   }

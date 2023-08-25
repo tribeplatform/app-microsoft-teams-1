@@ -1,7 +1,6 @@
 import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 
 import { SettingsBlockCallback } from '../constants'
-import { title } from 'process'
 export const getAuthSettingsBlocks = (options: {
   childern?: any
   id: string
@@ -36,90 +35,71 @@ export const getAuthSettingsBlocks = (options: {
   const card_content = 
   {
     id: `${id}.content`,
-    name: 'Card.Content',
+    name: 'Container',
+    props: {direction: "vertical-reverse", padding: 'lg'},
     children: [`${id}.container`,`${id}.rightContainer`],
-  }
-  // {
-    
-  //     id: `${id}.container`,
-  //     name: 'Container',
-  //     props: {
-  //       spacing: 'md',
-  //       direction: 'horizontal',
-  //     },
-  //     children: [`${id}.leftContainer`, `${id}.rightContainer`],
-  //   }
-  //   {
-    
-  //     id: `${id}.leftContainer`,
-  //     name: 'Container',
-  //     props: { alignment: { vertical: 'center' } },
-  //     children: [],
-    
-  // }
 
+  }
 
 const details = []
 if(childern){
 for (let i = 0; i< childern.length; i++){
   const selectedSpaceText = spaces.find(space => space.value === childern[i].spaceIds)?.text || '';
   const selectedTeamText = teams.find(team => team.value === childern[i].teamId)?.text || '';
-  const selectedChannelText = channels.find(channel => channel.value === childern[i].channelId)?.text || '';
+  // const selectedChannelText = channels.find(channel => channel.value === childern[i].channelId)?.text || '';
+  const selectedChannelText = 'masih'
   details.push(
     {
       id: id+'.'+i+'container',
       name: 'Container',
-      props: { padding:"xs", direction: 'horizontal' },
-      children: [id+'.'+i+'description', 'edit-button'+i, 'delete-button'+i],
+      props: { padding:"lg", direction: 'horizontal', alignment: {vertical: 'center'}, className: 'justify-between' },
+      // children: [id+'.'+i+'description', 'Buttons-container'+i],
+      children: [ 'description'+i, 'Buttons-container'+i],
+
     },
     {
-    id: id+'.'+i+'description',
+    id: 'description'+i,
+    name: 'Container',
+    props: {  alignment: { horizontal: 'left'}  },
+    children: ['description-text'+i]
+    
+  },
+  {
+    id: 'description-text'+i,
     name: 'Text',
     props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
-    
+
+  },
+  {
+    id: 'Buttons-container'+i,
+    name: 'Container',
+    props: {  direction: 'horizontal-reverse', alignment: { horizontal: 'right'}  },
+    children: ['edit-button'+i, 'delete-button'+i]
   },
   {
     id: 'edit-button'+i,
     name: 'Button',
-    props: {  variant: 'outline', callbackId: 'e' },
-    childern: ['buttonEdit'+i]
+    props: {  variant: 'danger', size: 'xs', callbackId: 'e', },
+    children: ['buttonEdit'+i]
   },
   {
     id: 'buttonEdit'+i,
-    name: 'Text',
-    props: { value: 'edit' },
+    name: 'Icon',
+    props: { name: 'alert-triangle', size: 'xs', iconType: 'outline', color: 'primary'  },
+  
   },
   {
     id: 'delete-button'+i,
     name: 'Button',
-    props: {  variant: 'outline', callbackId: 'd'},
-    childern: ['buttonDelete'+i]
+    props: {  variant: 'danger',text: 'Delete', size: 'xs', callbackId: 'd'},
+    children: ['buttonDelete'+i]
   },
   {
     id: 'buttonDelete'+i,
-    name: 'Text',
-    props: { value: 'Delete' },
+    name: 'Icon',
+    props: { name: 'refresh-cw-hr', size: 'xs', iconType: 'solid', color: 'primary'  },
   },
-//   {
-        
-//     "children": ["generate-button-text"],
-//     "id": "generate",
-//     "name": "Button",
-//     "props": {
-//       size: 'small',
-//         "callbackId":"generate",
-//         "variant":"primary"
-//     }
-// },
-// {
-    
-//     "children": [],
-//     "id": "generate-button-text",
-//     "name": "Icon",
-//     "props": {
-//         "value":"Generate API Key"
-//     }
-// }
+
   )
   card_content.children.push(id+'.'+i+'container')
 }
@@ -165,8 +145,8 @@ console.log('card_content', card_content)
       props: {
         direction: 'horizontal-reverse',
         spacing: 'xs',
-        alignment: { vertical: 'center', horizontal: 'right' },
-        shrink: false,
+        // alignment: { vertical: 'end', horizontal: 'left' },
+        shrink: true,
       },
       children: [`${id}.action`, ...(secondaryAction ? [`${id}.secondaryAction`] : [])],
     },

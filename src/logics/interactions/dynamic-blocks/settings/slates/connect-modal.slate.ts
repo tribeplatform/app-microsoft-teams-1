@@ -1,4 +1,3 @@
-import { Space } from '@tribeplatform/gql-client/types';
 import { RawSlateDto } from '@tribeplatform/slate-kit/dtos';
 import { SettingsBlockCallback } from '../constants';
 
