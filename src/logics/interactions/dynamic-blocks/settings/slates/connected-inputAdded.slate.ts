@@ -23,7 +23,6 @@ export const getConnectedSettingsSlate2 = async (options: {
 }): Promise<RawSlateDto> => {
   const {
     user,
-    selectedChannel,
     selectedSpace,
     selectedteam,
     ch,
@@ -35,34 +34,8 @@ export const getConnectedSettingsSlate2 = async (options: {
 
   const spacesList = await getSpaces(user.networkId);
   const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
-
- 
-
-  // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel
   const selectedSpaceText = spaces.find(space => space.value === selectedSpace)?.text || '';
   const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || '';
-  // const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
-  // const card_content = 
-  //   {
-  //     children: [],
-  //     id: 'all-channels',
-  //     name: 'Container',
-  //     props: { spacing: 'md' },
-  //   }
-  // const details = []
-  // for (let i = 0; i< ch.length; i++){
-  //   const selectedSpaceText = spaces.find(space => space.value === ch[i].spaceIds)?.text || '';
-  //   const selectedTeamText = teams.find(team => team.value === ch[i].teamId)?.text || '';
-  //   const selectedChannelText = channels.find(channel => channel.value === ch[i].channelId)?.text || '';
-  //   details.push({
-  //     id: 'details'+i,
-  //     name: 'Text',
-  //     props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}` },
-  //   })
-  //   card_content.children.push('details'+i)
-  // }
-  // console.log('details', details)
-  // console.log('card_content', card_content)
   
   return {
     rootBlock: 'root',

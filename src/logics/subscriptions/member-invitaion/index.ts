@@ -14,8 +14,9 @@ export const handleMemberInvitaionSubscription = async (
 
   const {
     networkId,
-    data: { verb, object },
+    data: { name, verb, object },
   } = webhook
+  let message: string = ''
   const member = {
     id: object?.id,
     email: object?.inviteeEmail,
@@ -26,28 +27,23 @@ export const handleMemberInvitaionSubscription = async (
     networkId: object?.networkId,
   } as Types.Member
   const spaceIdsList: string[] = JSON.parse(object?.extraInfo.defaultSpacesIds)
-  console.log(spaceIdsList[0])
   const gqlClient = await getNetworkClient(networkId)
   const actor = await getMember(gqlClient, object?.inviterId)
   const channels: string[] = []
   for (let i = 0; i < spaceIdsList.length; i++) {
-    console.log(spaceIdsList[i])
     const channel = (
       await ChannelRepository.findMany({
-        where: { networkId: networkId, memberInvitionAccepted: true, spaceIds: spaceIdsList[i] },
+        where: { networkId: networkId, events: { has: name }, spaceIds: spaceIdsList[i] },
       })
     ).map(channel => channel.channelId)
-    console.log(channel)
     channels.push(...channel)
   }
-  console.log(channels)
-
   switch (verb) {
     case EventVerb.CREATED:
-      const message = `${actor.name} invited ${member.email} to the community.`
-      await sendProactiveMessage(message, channels)
+      message = `${actor.name} invited ${member.email} to the community.`
       break
     default:
       break
   }
+  if (message && channels.length > 0) await sendProactiveMessage(message, channels)
 }

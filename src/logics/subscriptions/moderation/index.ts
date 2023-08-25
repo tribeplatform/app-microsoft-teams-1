@@ -5,7 +5,8 @@ import { getNetworkClient } from '@clients'
 import { Types } from '@tribeplatform/gql-client'
 import { EventVerb } from '@tribeplatform/gql-client/global-types'
 import { ChannelRepository } from '@/repositories/channel.repository'
-import { modration } from './logic.moderation'
+import { sendProactiveMessage } from '@/logics/oauth.logic'
+import { Member, Post } from '@tribeplatform/gql-client/types'
 const logger = globalLogger.setContext(`NetworkSubscription`)
 
 export const handleModerationSubscription = async (
@@ -13,46 +14,42 @@ export const handleModerationSubscription = async (
 ): Promise<void> => {
   const {
     networkId,
-    data: { verb, object },
+    data: { verb, object, name },
   } = webhook
   logger.debug('handleModerationSubscription called', { webhook })
   const gqlClient = await getNetworkClient(networkId)
-  let post: null
-  let member: null
-  let channels: string[] = []
+  let post: Post
+  let member: Member
+  let message: string = ''
+  let channels: string[] = (
+    await ChannelRepository.findMany({
+      where: { networkId: networkId, spaceIds: object?.spaceId, events: { has: name } },
+    })
+  ).map(channel => channel.channelId)
 
-  if (object.entityType === Types.ModerationEntityType.POST) post = await getPost(gqlClient,object.entityId)
-  else if (object.entityType === Types.ModerationEntityType.MEMBER) member = await getMember(gqlClient, object.createdById)
+  if (object.entityType === Types.ModerationEntityType.POST)
+    post = await getPost(gqlClient, object.entityId)
+  else if (object.entityType === Types.ModerationEntityType.MEMBER)
+    member = await getMember(gqlClient, object.createdById)
 
-  const actor = await getMember(gqlClient, (object as Types.Post)?.createdById)
-  const space = await getSpace(gqlClient, (object as Types.Post)?.spaceId)
+  const [actor, space] = await Promise.all([
+    getMember(gqlClient, (object as Types.Post)?.createdById),
+    getSpace(gqlClient, (object as Types.Post)?.spaceId),
+  ])
 
-  switch(verb){
+  switch (verb) {
     case EventVerb.CREATED:
-        channels =  (
-            await ChannelRepository.findMany({
-              where: { networkId: networkId, spaceIds: object?.spaceId, modarationCreated: true },
-            })
-          ).map(channel => channel.channelId)
-        await modration({object:post?post:member}, verb, space, channels)
-        break
+      message = `${member ? member.name : post.name} was flagged for moderation`
+      break
     case EventVerb.REJECTED:
-        channels =  (
-            await ChannelRepository.findMany({
-              where: { networkId: networkId, spaceIds: object?.spaceId, modarationRejected: true },
-            })
-          ).map(channel => channel.channelId)
-          await modration(actor, verb, space, channels)
-        break
+      message = `${actor.name} approved this post`
+      break
     case EventVerb.ACCEPTED:
-        channels =  (
-            await ChannelRepository.findMany({
-              where: { networkId: networkId, spaceIds: object?.spaceId, modarationAccepted: true },
-            })
-          ).map(channel => channel.channelId)
-          await modration(actor, verb, space, channels)
-        break
+      message = `${actor.name} rejected this post`
+      break
     default:
-    break
+      break
   }
+  if (message && channels.length > 0)
+    await sendProactiveMessage(message, channels, space.url)
 }

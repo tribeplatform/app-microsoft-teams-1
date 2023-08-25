@@ -37,16 +37,7 @@ model Channel {
   channelId String
   teamId String
   spaceIds String 
-  post Boolean @default(false)
-  spaceJoinRequestCreated Boolean @default(false)
-  spaceJoinRequestAccepted Boolean @default(false)
-  spaceMemberCreated Boolean @default(false)
-  spaceMemberDeleted Boolean @default(false)
-  memberVerified Boolean @default(false)
-  modarationRejected Boolean @default(false)
-  modarationCreated Boolean @default(false)
-  modarationAccepted Boolean @default(false)
-  memberInvitionAccepted Boolean @default(false)
+  events String[] @default([])
 
   @@index([networkId])
 

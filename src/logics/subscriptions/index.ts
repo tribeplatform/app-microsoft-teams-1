@@ -21,7 +21,12 @@ export const handleSubscriptionWebhook = async (
   const {
     data: { noun },
   } = webhook
-
+/*
+<div>
+  <h1>Post</h1>
+<button>Post</button>
+ </div>
+*/
   try {
     switch (noun) {
       case EventNoun.SPACE_JOIN_REQUEST:

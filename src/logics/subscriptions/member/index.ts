@@ -16,23 +16,25 @@ export const handleMemberSubscription = async (
     networkId,
     data: {
       verb,
+      name,
       object: { id },
     },
   } = webhook
+  let message: string = ''
   const gqlClient = await getNetworkClient(networkId)
   const member = await getMember(gqlClient, id)
   const channels = (
     await ChannelRepository.findMany({
-      where: { networkId: networkId, memberVerified: true },
+      where: { networkId: networkId, events: { has: name } },
     })
   ).map(channel => channel.channelId)
 
   switch (verb) {
     case EventVerb.VERIFIED:
-      const message = `${member} joined the community.`
-      await sendProactiveMessage(message, channels)
+      message = `${member.name} joined the community.`
       break
     default:
       break
   }
+  if (message && channels.length > 0) await sendProactiveMessage(message, channels)
 }

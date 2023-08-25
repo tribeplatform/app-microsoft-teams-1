@@ -16,37 +16,40 @@ export const handleSpaceJoinRequestSubscription = async (
   const {
     networkId,
     data: {
+      name,
       verb,
       object: { spaceId, memberId, updatedById },
     },
   } = webhook
   let message: string = ''
-  let channels: string[] = []
+  let channels: string[] = (
+    await ChannelRepository.findMany({
+      where: {
+        networkId: networkId,
+        spaceIds: spaceId,
+        events: {
+          has: name,
+        },
+      },
+    })
+  ).map(channel => channel.channelId)
   const gqlClient = await getNetworkClient(networkId)
-  const member = await getMember(gqlClient,memberId)
-  const space = await getSpace(gqlClient,spaceId)
-  const actor = await getMember(gqlClient,updatedById)
-    switch (verb) {
-        case EventVerb.CREATED:
-            channels =  (
-                await ChannelRepository.findMany({
-                  where: { networkId: networkId, spaceIds: spaceId, spaceJoinRequestCreated: true },
-                })
-              ).map(channel => channel.channelId)
-             message = `${member} requested to join ${space.name}`
-            await sendProactiveMessage(message, channels, space.url)
-            break
-        case EventVerb.ACCEPTED:
-            channels =  (
-                await ChannelRepository.findMany({
-                  where: { networkId: networkId, spaceIds: spaceId, spaceJoinRequestAccepted: true },
-                })
-              ).map(channel => channel.channelId)
-               message = `${actor} accepted ${member}'s request to join ${space.name}`
-              await sendProactiveMessage(message, channels, space.url)
-            break
-        default:
-            break
-    }
+  const [member, space, actor] = await Promise.all([
+    getMember(gqlClient, memberId),
+    getSpace(gqlClient, spaceId),
+    getMember(gqlClient, updatedById),
+  ])
 
+  switch (verb) {
+    case EventVerb.CREATED:
+      message = `${member} requested to join ${space.name}`
+      break
+    case EventVerb.ACCEPTED:
+      message = `${actor} accepted ${member}'s request to join ${space.name}`
+      break
+    default:
+      break
+  }
+  if (message && channels.length > 0)
+    await sendProactiveMessage(message, channels, space.url)
 }

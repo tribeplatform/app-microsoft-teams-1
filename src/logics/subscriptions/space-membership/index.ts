@@ -1,12 +1,11 @@
 import { getNetworkClient } from '@clients'
 import { SubscriptionWebhook } from '@interfaces'
 import { EventVerb } from '@tribeplatform/gql-client/global-types'
-import {  globalLogger } from '@utils'
-
+import { globalLogger } from '@utils'
 
 import { getMember, getSpace } from '../helper'
 import { ChannelRepository } from '@/repositories/channel.repository'
-import { memberShipSpace } from './space-membership.logic'
+import { sendProactiveMessage } from '@/logics/oauth.logic'
 
 const logger = globalLogger.setContext(`NetworkSubscription`)
 
@@ -18,34 +17,42 @@ export const handleSpaceMembershipSubscription = async (
   const {
     networkId,
     data: {
+      name,
       verb,
       actor: { id: actorId },
       object: { spaceId, memberId },
     },
   } = webhook
-  let self : boolean = false
-  let channels: string[] = []
+  let self: boolean = false
+  let message: string = ''
+  let channels: string[] = (
+    await ChannelRepository.findMany({
+      where: { networkId: networkId, spaceIds: spaceId, events: { has: name } },
+    })
+  ).map(channel => channel.channelId)
   const gqlClient = await getNetworkClient(networkId)
-  const space = await getSpace(gqlClient, spaceId)
-  const actor = await getMember(gqlClient, actorId)
-  const member = await getMember(gqlClient, memberId)
-  if(actorId === memberId) self = true
+  const [space, actor, member] = await Promise.all([
+    getSpace(gqlClient, spaceId),
+    getMember(gqlClient, actorId),
+    getMember(gqlClient, memberId),
+  ])
+  if (actorId === memberId) self = true
   switch (verb) {
     case EventVerb.CREATED:
-        channels =  (
-            await ChannelRepository.findMany({
-              where: { networkId: networkId, spaceIds: spaceId, spaceMemberCreated: true },
-            })
-          ).map(channel => channel.channelId)
-            await memberShipSpace(member, self, verb, space, channels, actor)
-        break
+      if (self == true) {
+        message = `${member} joined ${space.name}`
+      } else {
+        message = `${actor} added ${member} to ${space.name} `
+      }
+      break
     case EventVerb.DELETED:
-        channels =  (
-            await ChannelRepository.findMany({
-              where: { networkId: networkId, spaceIds: spaceId, spaceMemberDeleted: true },
-            })
-          ).map(channel => channel.channelId)
-          await memberShipSpace(member, self, verb, space, channels, actor)
-        break
-        }
+      if (self == true) {
+        message = `${member} left ${space.name}`
+      } else {
+        message = `${actor} removed ${member} from ${space.name}`
+      }
+      break
+  }
+  if (message && channels.length > 0)
+    await sendProactiveMessage(message, channels, space.url)
 }

@@ -1,4 +1,4 @@
-import { Space } from '@tribeplatform/gql-client/types'
+import { InputIds, Space } from '@tribeplatform/gql-client/types'
 import { RawSlateDto } from '@tribeplatform/slate-kit/dtos'
 import { SettingsBlockCallback } from '../constants'
 import { ChannelRepository } from '@/repositories/channel.repository'
@@ -8,13 +8,13 @@ export const getConnectModalSlate = async (options?: {
   upgradeMode?: boolean
   showEnvPicker?: true
   spaces?: object
-  teams?: object
+  teams?: InputIds[]
   channels?: object // Add channels option
   showTeams?: boolean
   editMode?: boolean
-  team?: object
-  space?: object
-  channel?: object
+  team?: InputIds
+  space?: InputIds
+  channel?: InputIds
 }): Promise<RawSlateDto> => {
   const {
     spaces,
@@ -29,11 +29,37 @@ export const getConnectModalSlate = async (options?: {
     upgradeMode,
   } = options || {}
   let channelRep: any
-  let post: boolean = false
-  if(objectId){ 
-   channelRep = await ChannelRepository.findUnique(objectId)
-
+  const eventsList = [
+    'post.published',
+    'member.verified',
+    'member_invitation.created',
+    'space_join_request.accepted',
+    'space_join_request.created',
+    'moderation.created',
+    'moderation.rejected',
+    'moderation.accepted',
+    'space_membership.deleted',
+    'space_membership.created',
+  ]
+  const eventBlocks = eventsList.map(event => {
+    return {
+      id: event,
+      name: 'Toggle',
+      props: { name: event, label: event, checked: false },
+    }
+  })
+  let mappedEvents
+  if (objectId) {
+    channelRep = await ChannelRepository.findUnique(objectId)
+    mappedEvents = channelRep.events.reduce(
+      (accumulator, event) => ({
+        ...accumulator,
+        [event]: true,
+      }),
+      { teamId: team.value, spaceId: space.value, channelId: channel.value },
+    )
   }
+
   console.log('channelRep in edit', channelRep)
   const id = Math.floor(Math.random() * Date.now()).toString(36)
   return {
@@ -49,23 +75,7 @@ export const getConnectModalSlate = async (options?: {
               : SettingsBlockCallback.SaveModal,
 
           defaultValues: editMode
-            ? {
-                teamId: team.value,
-                spaceId: space.value,
-                channelId: channel.value,
-                post: channelRep.post,
-                modarationCreated: channelRep.modarationCreated,
-                modarationRejected: channelRep.modarationRejected,
-                modarationAccepted: channelRep.modarationAccepted,
-                memberVerified: channelRep.memberVerified,
-                memberInvitionAccepted: channelRep.memberInvitionAccepted,
-                spaceMemberDeleted: channelRep.spaceMemberDeleted,
-                spaceJoinRequestCreated: channelRep.spaceJoinRequestCreated,
-                spaceJoinRequestAccepted: channelRep.spaceJoinRequestAccepted,
-                spaceMemberCreated: channelRep.spaceMemberCreated,
-                
-
-              }
+            ? mappedEvents
             : {
                 teamId: showTeams ? teams[0].value : [],
                 spaceId: spaces[0].value,
@@ -88,8 +98,9 @@ export const getConnectModalSlate = async (options?: {
           'auth.toggles',
           'auth.save',
           'auth.footer',
-        ], // Add 'auth.channelPicker'
+        ],
       },
+
       {
         id: 'auth.toggles',
         name: 'Card',
@@ -105,58 +116,9 @@ export const getConnectModalSlate = async (options?: {
         id: 'auth.toggle.body',
         name: 'Card.Content',
         props: { spacing: 'md' },
-        children: ['auth.toggle.postCreated', 'auth.toggle.modarationCreated', 'auth.toggle.modarationRejected', 'auth.toggle.modarationAccepted', 'auth.toggle.memberVerified', 'auth.toggle.memberInvitionAccepted', 'auth.toggle.spaceMemberDeleted', 'auth.toggle.spaceMemberCreated', 'auth.toggle.spaceJoinRequestCreated', 'auth.toggle.spaceJoinRequestAccepted'],
+        children: [...eventsList],
       },
-      {
-        id: 'auth.toggle.postCreated',
-        name: 'Toggle',
-        props: { name: 'post', label: 'Post created' },
-      },
-      {
-        id: 'auth.toggle.modarationCreated',
-        name: 'Toggle',
-        props: { name: 'modarationCreated', label: 'Modaration created', checked: channelRep ? channelRep.modarationCreated : false },
-      },
-      {
-        id: 'auth.toggle.modarationRejected',
-        name: 'Toggle',
-        props: { name: 'modarationRejected', label: 'Modaration rejected', checked: channelRep ? channelRep.modarationRejected : false },
-      },
-      {
-        id: 'auth.toggle.modarationAccepted',
-        name: 'Toggle',
-        props: { name: 'modarationAccepted', label: 'Modaration accepted', checked: channelRep ? channelRep.modarationAccepted : false },
-      },
-      {
-        id: 'auth.toggle.memberVerified',
-        name: 'Toggle',
-        props: { name: 'memberVerified', label: 'Member verification', checked: channelRep ? channelRep.memberVerified : false },
-      },
-      {
-        id: 'auth.toggle.spaceMemberCreated',
-        name: 'Toggle',
-        props: { name: 'spaceMemberCreated', label: 'Space member created', checked: channelRep ? channelRep.spaceMemberCreated : false },
-      },
-      {
-        id: 'auth.toggle.memberInvitionAccepted',
-        name: 'Toggle',
-        props: { name: 'memberInvitionAccepted', label: 'Member invitation acceptance', checked: channelRep ? channelRep.memberInvitionAccepted : false },
-      },
-      {
-        id: 'auth.toggle.spaceMemberDeleted',
-        name: 'Toggle',
-        props: { name: 'spaceMemberDeleted', label: 'Space member deleted', checked: channelRep ? channelRep.spaceMemberDeleted : false },
-      },
-      {
-        id: 'auth.toggle.spaceJoinRequestCreated',
-        name: 'Toggle',
-        props: { name: 'spaceJoinRequestCreated', label: 'Space join request created', checked: channelRep ? channelRep.spaceJoinRequestCreated : false },
-      },
-      {
-        id: 'auth.toggle.spaceJoinRequestAccepted',
-        name: 'Toggle',
-        props: { name: 'spaceJoinRequestAccepted', label: 'Space join request accepted', checked: channelRep ? channelRep.spaceJoinRequestAccepted : false },
-      },
+      ...eventBlocks,
       {
         id: 'auth.spacePicker',
         name: 'Select',
@@ -211,16 +173,6 @@ export const getConnectModalSlate = async (options?: {
         props: { direction: 'horizontal-reverse' },
         children: ['auth.action'],
       },
-
-      // {
-      //   id: 'auth.action',
-      //   name: 'Button',
-      //   props: {
-      //     type: 'submit',
-      //     variant: 'primary',
-      //     text: 'Connect',
-      //   },
-      // },
     ],
   }
 }

@@ -23,7 +23,6 @@ export const getAuthSettingsBlocks = async (options: {
     token,
     spaces,
     teams,
-    channels,
     childern,
     id,
     title,
@@ -38,28 +37,10 @@ export const getAuthSettingsBlocks = async (options: {
   const card_content = 
   {
     id: `${id}.content`,
-    name: 'Card.Content',
+    name: 'Container',
+    props: { direction: 'vertical-reverse', padding : 'xs' },
     children: [`${id}.container`,`${id}.rightContainer`],
   }
-  // {
-    
-  //     id: `${id}.container`,
-  //     name: 'Container',
-  //     props: {
-  //       spacing: 'md',
-  //       direction: 'horizontal',
-  //     },
-  //     children: [`${id}.leftContainer`, `${id}.rightContainer`],
-  //   }
-  //   {
-    
-  //     id: `${id}.leftContainer`,
-  //     name: 'Container',
-  //     props: { alignment: { vertical: 'center' } },
-  //     children: [],
-    
-  // }
-
 
 const details = []
 const length = childern?.length || 0
@@ -67,22 +48,33 @@ if(childern){
 for (let i = 0; i< childern.length; i++){
   const selectedSpaceText = spaces.find(space => space.value === childern[i].spaceIds)?.text || '';
   const selectedTeamText = teams.find(team => team.value === childern[i].teamId);
-  console.log('selectedchannel', childern[i].channelId)
   const channel = await getListOfChannels(token, selectedTeamText.value );
-
   const selectedChannelText = channel.find(channel => channel.value === childern[i].channelId)?.text || '';
   const selectedObjectId = childern[i].id
   details.push(
     {
       id: id+'.'+i+'container',
       name: 'Container',
-      props: { padding:"xs", direction: 'horizontal' },
-      children: [id+'.'+i+'description', 'edit-button'+i, 'delete-button'+i],
+      props: { direction: 'horizontal',size:'full', className:'space-x-20' },
+      children: [ id+'.'+i+'description'+"-container", id+'.'+i+'button'+"-container"],
     },
+    {
+      id: id+'.'+i+'description'+"-container",
+      name: 'Container',
+      props: { direction: 'vertical' ,className:'justify-between' },
+      children: [id+'.'+i+'description'],
+    },
+    {
+      id: id+'.'+i+'button'+"-container",
+      name: 'Container',
+      props: { direction: ' horizontal ',size:'full' ,className:'justify-between' },
+      children: ['edit-button'+i, 'delete-button'+i],
+    },
+  
     {
     id: id+'.'+i+'description',
     name: 'Text',
-    props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText.text}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
+    props: {className:'flex-1' ,value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText.text}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
     
   },
   {
@@ -108,28 +100,7 @@ for (let i = 0; i< childern.length; i++){
     name: 'Text',
     props: { value: 'Delete' },
   },
- 
- 
-//   {
-        
-//     "children": ["generate-button-text"],
-//     "id": "generate",
-//     "name": "Button",
-//     "props": {
-//       size: 'small',
-//         "callbackId":"generate",
-//         "variant":"primary"
-//     }
-// },
-// {
-    
-//     "children": [],
-//     "id": "generate-button-text",
-//     "name": "Icon",
-//     "props": {
-//         "value":"Generate API Key"
-//     }
-// }
+
   )
   card_content.children.push(id+'.'+i+'container')
 }
@@ -148,10 +119,7 @@ for (let i = 0; i< childern.length; i++){
 }
 console.log('details', details)
 console.log('card_content', card_content)
-  
-  // for (const child of childern) {
-  //   blocks.push({})
-  // }
+
   return [
     {
       id,
@@ -175,7 +143,7 @@ console.log('card_content', card_content)
       props: {
         direction: 'horizontal-reverse',
         spacing: 'xs',
-        alignment: { vertical: 'center', horizontal: 'right' },
+        alignment: {  horizontal: 'right' },
         shrink: false,
       },
       children: [`${id}.action`, ...(secondaryAction ? [`${id}.secondaryAction`] : [])],

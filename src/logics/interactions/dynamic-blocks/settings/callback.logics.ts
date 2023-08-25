@@ -307,22 +307,13 @@ const handleSaveButtonClick = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
+
   const {
     spaceId: spaces,
     teamId: teams,
     channelId,
-    post,
-    modarationCreated,
-    modarationRejected,
-    memberInvitionAccepted,
-    spaceMemberDeleted,
-    spaceMemberCreated,
-    spaceJoinRequestCreated,
-    spaceJoinRequestAccepted,
-    modarationAccepted,
-    memberVerified
   } = data.inputs
-  console.log('hi', data.inputs)
+  console.log('data inputs: \n', data.inputs)
   const channelReps = await ChannelRepository.findMany()
   try {
     for (var i = 0; i < channelReps.length; i++) {
@@ -341,30 +332,31 @@ const handleSaveButtonClick = async (
         })
       }
     }
-
-    // Save the user's selections in the database, along with other existing fields
-    console.log('hi', teams)
+    const events : string[] = []
+    for (const key in data.inputs) {
+      if (data.inputs[key] && typeof data.inputs[key] === 'object') {
+        const subProperties = data.inputs[key];
+    
+        for (const subKey in subProperties as any) {
+          if (subProperties[subKey]) {
+            events.push(`${key}.${subKey}`);
+          }
+        }
+      }
+    }
+    console.log('events ordered: \n', events)
+    
+    console.log('teams: ', teams)
     await ChannelRepository.create({
       networkId: networkId as string,
       spaceIds: spaces as string,
       teamId: teams as string,
       channelId: channelId as string,
-      post: post as boolean,
-      modarationCreated: modarationCreated as boolean,
-      modarationRejected: modarationRejected as boolean,
-      memberInvitionAccepted: memberInvitionAccepted as boolean,
-      spaceMemberDeleted: spaceMemberDeleted as boolean,
-      spaceMemberCreated: spaceMemberCreated as boolean,
-      spaceJoinRequestCreated: spaceJoinRequestCreated as boolean,
-      spaceJoinRequestAccepted: spaceJoinRequestAccepted as boolean,
-      memberVerified: memberVerified as boolean,
-      modarationAccepted: modarationAccepted as boolean,
+      events: events,
     })
-    // const network = await NetworkRepository.findUnique(networkId)
+
 
     const user = await NetworkRepository.findUnique(networkId)
-    // return getConnectedSettingsResponse(options.data, network)
-    // const updateSlate = getConnectedSettingsSlate2()
 
     try {
       await installingBotTeams(networkId, user.token, teams, user.tenantId)
@@ -429,19 +421,22 @@ const handleUpdateButtonClick = async (
   const { networkId, data } = options
   const { spaceId: spaces, teamId: teams, channelId,
     post,
-    modarationCreated,
-    modarationRejected,
-    memberInvitionAccepted,
-    spaceMemberDeleted,
-    spaceMemberCreated,
-    spaceJoinRequestCreated,
-    spaceJoinRequestAccepted,
-    modarationAccepted,
-    memberVerified } = data.inputs
+   } = data.inputs
   console.log('hi', data.inputs)
   const callback = data.callbackId as string
   const id = callback.split('-')[1]
-  const channelReps = await ChannelRepository.findMany()
+  const events : string[] = []
+  for (const key in data.inputs) {
+    if (data.inputs[key] && typeof data.inputs[key] === 'object') {
+      const subProperties = data.inputs[key];
+  
+      for (const subKey in subProperties as any) {
+        if (subProperties[subKey]) {
+          events.push(`${key}.${subKey}`);
+        }
+      }
+    }
+  }
   try {
     // for (var i = 0; i < channelReps.length; i++) {
     //   if (
@@ -464,16 +459,7 @@ const handleUpdateButtonClick = async (
       spaceIds: spaces as string,
       teamId: teams as string,
       channelId: channelId as string,
-      post: post as boolean,
-      modarationCreated: modarationCreated as boolean,
-      modarationRejected: modarationRejected as boolean,
-      memberInvitionAccepted: memberInvitionAccepted as boolean,
-      spaceMemberDeleted: spaceMemberDeleted as boolean,
-      spaceMemberCreated: spaceMemberCreated as boolean,
-      spaceJoinRequestCreated: spaceJoinRequestCreated as boolean,
-      spaceJoinRequestAccepted: spaceJoinRequestAccepted as boolean,
-      memberVerified: memberVerified as boolean,
-      modarationAccepted: modarationAccepted as boolean,
+      events: events,
     })
 
     // const network = await NetworkRepository.findUnique(networkId)
