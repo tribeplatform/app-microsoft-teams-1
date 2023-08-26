@@ -133,7 +133,7 @@ const getFetchChannelsCallbackResponse = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { teamId, spaceId,  } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+  const { teamId, spaceId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
 
   // Your code here to fetch the channels for the selected team and space
   try {
@@ -222,7 +222,7 @@ const getFetchChannelsCallbackResponseUpgrade = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { teamId, spaceId,  } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
+  const { teamId, spaceId } = data.inputs.formValues as any // Destructure 'selectedTeamId' and 'selectedSpacesId' from 'inputs'
   const callback = data.callbackId as string
   const id = callback.split('-')[1]
   // Your code here to fetch the channels for the selected team and space
@@ -301,11 +301,7 @@ const handleSaveButtonClick = async (
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
 
-  const {
-    spaceId: spaces,
-    teamId: teams,
-    channelId,
-  } = data.inputs
+  const { spaceId: spaces, teamId: teams, channelId } = data.inputs
   console.log('data inputs: \n', data.inputs)
   const channelReps = await ChannelRepository.findMany()
   try {
@@ -325,20 +321,20 @@ const handleSaveButtonClick = async (
         })
       }
     }
-    const events : string[] = []
+    const events: string[] = []
     for (const key in data.inputs) {
       if (data.inputs[key] && typeof data.inputs[key] === 'object') {
-        const subProperties = data.inputs[key];
-    
+        const subProperties = data.inputs[key]
+
         for (const subKey in subProperties as any) {
           if (subProperties[subKey]) {
-            events.push(`${key}.${subKey}`);
+            events.push(`${key}.${subKey}`)
           }
         }
       }
     }
     console.log('events ordered: \n', events)
-    
+
     console.log('teams: ', teams)
     await ChannelRepository.create({
       networkId: networkId as string,
@@ -347,7 +343,6 @@ const handleSaveButtonClick = async (
       channelId: channelId as string,
       events: events,
     })
-
 
     const user = await NetworkRepository.findUnique(networkId)
 
@@ -370,7 +365,8 @@ const handleSaveButtonClick = async (
     }
     try {
       const title = 'Community Bot is connected!'
-      const message = 'Hi there, *Community Bot* is here! I would inform you on community updates in this channel.'
+      const message =
+        'Hi there, *Community Bot* is here! I would inform you on community updates in this channel.'
       //  sendProactiveMessage('Hello amir', [channelId as string])
     } catch (e) {
       console.log(e)
@@ -412,20 +408,18 @@ const handleUpdateButtonClick = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
-  const { spaceId: spaces, teamId: teams, channelId,
-    post,
-   } = data.inputs
+  const { spaceId: spaces, teamId: teams, channelId, post } = data.inputs
   console.log('hi', data.inputs)
   const callback = data.callbackId as string
   const id = callback.split('-')[1]
-  const events : string[] = []
+  const events: string[] = []
   for (const key in data.inputs) {
     if (data.inputs[key] && typeof data.inputs[key] === 'object') {
-      const subProperties = data.inputs[key];
-  
+      const subProperties = data.inputs[key]
+
       for (const subKey in subProperties as any) {
         if (subProperties[subKey]) {
-          events.push(`${key}.${subKey}`);
+          events.push(`${key}.${subKey}`)
         }
       }
     }
