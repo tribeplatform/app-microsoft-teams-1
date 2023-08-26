@@ -51,21 +51,27 @@ export const getAuthSettingsBlocks = async (options: {
       details.push(
         {
           id: `${id}.${i}.container`,
-          name: 'Container',
-          props: { padding: 'md', direction: 'horizontal', className: '' },
-          children: [`${id}.${i}.description-container`, `${id}.${i}.button-container`],
+          name: 'Card',
+          props: {  direction: 'horizontal', className: 'flex justify-around' },
+          children: [ `${id}.${i}.cardContent`],
+        },
+        {
+          id: `${id}.${i}.cardContent`,
+          name: 'Card.Content',
+          children :[`${id}.${i}.description-container`,`${id}.${i}.button-container`],
+          props: {  direction: 'horizontal', className: 'flex justify-between' },
         },
         {
           id: `${id}.${i}.description-container`,
           name: 'Container',
-          props: { padding: 'md', direction: 'vertical', className: '' },
-          children: [`${id}.${i}.description`],
+          props: { padding: 'md', direction: 'horizontal', className: 'justify-around' },
+          children: [`${id}.${i}.description`, ],
         },
         {
           id: `${id}.${i}.button-container`,
-          name: 'Container',
-          props: { padding: 'md', direction: ' horizontal ', className: '' },
-          children: [`edit-button.${i}`, `delete-button.${i}`],
+          name: 'Card.Content',
+          props: { padding: 'md', direction: ' horizontal ', className: 'flex right-0 gap-x-2 lg:p-6' ,  alignment: { horizontal: 'right' },},
+          children: [ `edit-button.${i}`,`delete-button.${i}` ],
         },
 
         {
@@ -81,6 +87,7 @@ export const getAuthSettingsBlocks = async (options: {
           id: `edit-button.${i}`,
           name: 'Button',
           props: {
+            calssName: 'self-center',
             variant: 'basic',
             callbackId: `edit-${selectedObjectId}`,
             text: 'Edit',
