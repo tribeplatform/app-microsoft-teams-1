@@ -30,8 +30,6 @@ export const getAuthSettingsBlocks = async (options: {
     action,
     actionVariant,
     actionCallbackId,
-    secondaryAction,
-    secondaryActionCallbackId,
   } = options
 
   const card_content = 
@@ -41,7 +39,6 @@ export const getAuthSettingsBlocks = async (options: {
     props: { direction: 'vertical-reverse', padding : 'xs' },
     children: [`${id}.container`,`${id}.rightContainer`],
   }
-
 const details = []
 const length = childern?.length || 0
 if(childern){
@@ -53,56 +50,46 @@ for (let i = 0; i< childern.length; i++){
   const selectedObjectId = childern[i].id
   details.push(
     {
-      id: id+'.'+i+'container',
+      id: `${id}.${i}.container`,
       name: 'Container',
       props: { direction: 'horizontal',size:'full', className:'space-x-20' },
-      children: [ id+'.'+i+'description'+"-container", id+'.'+i+'button'+"-container"],
+      children: [ `${id}.${i}.button-container`, `${id}.${i}.button-container`],
     },
     {
-      id: id+'.'+i+'description'+"-container",
+      id: `${id}.${i}.button-container`,
       name: 'Container',
       props: { direction: 'vertical' ,className:'justify-between' },
-      children: [id+'.'+i+'description'],
+      children: [`${id}.${i}.description`],
     },
     {
-      id: id+'.'+i+'button'+"-container",
+      id: `${id}.${i}.button-container`,
       name: 'Container',
       props: { direction: ' horizontal ',size:'full' ,className:'justify-between' },
-      children: ['edit-button'+i, 'delete-button'+i],
+      children: [`edit-button.${i}`, `delete-button.${i}`],
     },
   
     {
-    id: id+'.'+i+'description',
+    id: `${id}.${i}.description`,
     name: 'Text',
     props: {className:'flex-1' ,value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText.text}<br>Channel: ${selectedChannelText}`, format: 'markdown' },
     
   },
   {
-    id: 'edit-button'+i,
+    id: `edit-button.${i}`,
     name: 'Button',
-    props: {  variant: 'secondary', callbackId: 'edit-'+selectedObjectId, text:'Edit' },
-    children: ['buttonEdit'+i]
+    props: {  variant: 'secondary', callbackId: `edit-${selectedObjectId}`, text:'Edit' },
+    children: []
   },
   {
-    id: 'buttonEdit'+i,
-    name: 'Text',
-    props: { value: 'edit' },
-  },
-  {
-    id: 'delete-button'+i,
+    id: `delete-button.${i}`,
     name: 'Button',
-    props: {  variant: 'danger', callbackId: 'delete-'+selectedObjectId, text: "Delete"},
-    children: ['buttonDelete'+i]
+    props: {  variant: 'danger', callbackId: `delete-${selectedObjectId}`, text: "Delete"},
+    children: []
     
-  },
-  {
-    id: 'buttonDelete'+i,
-    name: 'Text',
-    props: { value: 'Delete' },
   },
 
   )
-  card_content.children.push(id+'.'+i+'container')
+  card_content.children.push(`${id}.${i}.container`)
 }
 
 }else{
@@ -117,9 +104,6 @@ for (let i = 0; i< childern.length; i++){
   details.push(blocks)
   card_content.children.push(`${id}.description`)
 }
-console.log('details', details)
-console.log('card_content', card_content)
-
   return [
     {
       id,
@@ -131,9 +115,6 @@ console.log('card_content', card_content)
       name: 'Card.Header',
       props: { title: title || 'Your authorization' },
     },
-
-
-
     card_content,
     ...details,
 
@@ -146,7 +127,7 @@ console.log('card_content', card_content)
         alignment: {  horizontal: 'right' },
         shrink: false,
       },
-      children: [`${id}.action`, ...(secondaryAction ? [`${id}.secondaryAction`] : [])],
+      children: [`${id}.action`],
     },
     {
       id: `${id}.action`,
@@ -156,18 +137,18 @@ console.log('card_content', card_content)
         "title": "you have reached the max!",
       } :{ variant: actionVariant, callbackId: actionCallbackId, text:action },
     },
-    ...(secondaryAction
-      ? [
-          {
-            id: `${id}.secondaryAction`,
-            name: 'Button',
-            props: {
-              variant: 'basic',
-              callbackId: secondaryActionCallbackId,
-              text: secondaryAction,
-            },
-          },
-        ]
-      : []),
+    // ...(secondaryAction
+    //   ? [
+    //       {
+    //         id: `${id}.secondaryAction`,
+    //         name: 'Button',
+    //         props: {
+    //           variant: 'basic',
+    //           callbackId: secondaryActionCallbackId,
+    //           text: secondaryAction,
+    //         },
+    //       },
+    //     ]
+    //   : []),
   ]
 }
