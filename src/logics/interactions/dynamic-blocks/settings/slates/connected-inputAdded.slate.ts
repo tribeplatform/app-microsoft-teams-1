@@ -37,11 +37,7 @@ export const getConnectedSettingsSlate2 = async (options: {
         props: { spacing: 'md' },
         children: ['chanels-integration', 'adding-teams', 'auth', 'channels'],
       },
-      {
-        id: 'channels',
-        name: 'Card',
-        children: ['all-channels', 'icontest'],
-      },
+  
 
 
       ...(await getAuthSettingsBlocks({

@@ -32,10 +32,10 @@ export const getAuthSettingsBlocks = async (options: {
   } = options
 
   const card_content = {
-    id: `${id}.content`,
+    id: `${id}.card`,
     name: 'Container',
-    props: { direction: 'vertical-reverse', padding: 'md' },
-    children: [`${id}.container`, `${id}.rightContainer`],
+    props: { direction: 'vertical-reverse', padding: 'xs' },
+    children: [ `${id}.rightContainer`],
   }
   const details = []
   const length = childern?.length || 0
@@ -50,7 +50,7 @@ export const getAuthSettingsBlocks = async (options: {
       const selectedObjectId = childern[i].id
       details.push(
         {
-          id: `${id}.${i}.container`,
+          id: `${id}.${i}.card`,
           name: 'Card',
           props: {  direction: 'horizontal', className: 'flex justify-around' },
           children: [ `${id}.${i}.cardContent`],
@@ -64,23 +64,47 @@ export const getAuthSettingsBlocks = async (options: {
         {
           id: `${id}.${i}.description-container`,
           name: 'Container',
-          props: { padding: 'md', direction: 'horizontal', className: 'justify-around' },
+          props: { padding: 'xs', direction: 'horizontal', alignment: { vertical: 'center' }, className: 'justify-around' },
           children: [`${id}.${i}.description`, ],
         },
         {
           id: `${id}.${i}.button-container`,
           name: 'Card.Content',
-          props: { padding: 'md', direction: ' horizontal ', className: 'flex right-0 gap-x-2 lg:p-6' ,  alignment: { horizontal: 'right' },},
+          props: { size: 'xs', direction: ' horizontal ', className: 'flex right-0 gap-x-2 lg:p-6 self-center' ,  alignment: { horizontal: 'right' },},
           children: [ `edit-button.${i}`,`delete-button.${i}` ],
         },
 
         {
           id: `${id}.${i}.description`,
+          name: 'Card.Content',
+          props: {
+            className: 'grid grid-cols-1 gap-1'
+          },
+          children: [`${id}.${i}.space`, `${id}.${i}.team`, `${id}.${i}.channel`],
+        },
+        {
+          id: `${id}.${i}.space`,
           name: 'Text',
           props: {
-            className: '',
-            value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText.text}<br>Channel: ${selectedChannelText}`,
-            format: 'markdown',
+            value: `Space: ${selectedSpaceText} `,
+            format: 'plain',
+          },
+          
+        },
+        {
+          id: `${id}.${i}.team`,
+          name: 'Text',
+          props: {
+            value: `Teams: ${selectedTeamText.text} `,
+            format: 'plain',
+          },
+        },
+        {
+          id: `${id}.${i}.channel`,
+          name: 'Text',
+          props: {
+            value: `Channel: ${selectedChannelText} `,
+            format: 'plain',
           },
         },
         {
@@ -126,7 +150,7 @@ export const getAuthSettingsBlocks = async (options: {
           children: [`${i}.iconDelete`],
         },
       )
-      card_content.children.push(`${id}.${i}.container`)
+      card_content.children.push(`${id}.${i}.card`)
     }
   } else {
     const blocks = {
@@ -144,7 +168,7 @@ export const getAuthSettingsBlocks = async (options: {
     {
       id,
       name: 'Card',
-      children: [`${id}.header`, `${id}.content`],
+      children: [`${id}.header`,`${id}.container` ],
     },
     {
       id: `${id}.header`,
@@ -152,11 +176,13 @@ export const getAuthSettingsBlocks = async (options: {
       props: { title: title || 'Your authorization' },
     },
     {
-      id: `${id}.content`,
+      id: `${id}.container`,
       name: 'Card.Content',
-      props: { direction: 'vertical-reverse', padding: 'md' },
-      children: [`${id}.container`],
+      props: { direction: 'vertical', padding: 'xs' },
+      children: [`${id}.card`],
     },
+  
+
     card_content,
     ...details,
 
@@ -165,7 +191,7 @@ export const getAuthSettingsBlocks = async (options: {
       name: 'Container',
       props: {
         direction: 'horizontal-reverse',
-        spacing: 'xs',
+        spacing: 'md',
         alignment: { horizontal: 'left' },
         shrink: false,
       },
