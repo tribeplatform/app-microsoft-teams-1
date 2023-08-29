@@ -9,60 +9,25 @@ import { getListOfChannels, getListOfTeams, getSpaces } from '../microsoft-info.
 import { getAuthSettingsBlocks } from './auth.slate'
 // import { getChanelIntegrationBlocks } from './chanel-integration.slate'
 
-
 export const getConnectedSettingsSlate2 = async (options: {
   user: Network
   arryChannel?: string[]
-  selectedChannel,
-  selectedSpace,
+  selectedChannel
+  selectedSpace
   selectedteam
-  teams,
-  channels
+  teams
+  channels?
   ch
+  token?
 }): Promise<RawSlateDto> => {
-  const {
-    user,
-    selectedChannel,
-    selectedSpace,
-    selectedteam,
-    ch,
-    teams,
-    channels
-  } = options
+  const { user, selectedSpace, selectedteam, ch, teams, channels, token } = options
 
-  const accessToken = user.token;
-  const spacesList = await getSpaces(user.networkId);
-  const spaces = spacesList.map(space => ({value: space.id, text: space.name}))
+  const spacesList = await getSpaces(user.networkId)
+  const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
+  const selectedSpaceText =
+    spaces.find(space => space.value === selectedSpace)?.text || ''
+  const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || ''
 
- 
-
-  // Find the corresponding text for the selectedSpace, selectedTeam, and selectedChannel
-  const selectedSpaceText = spaces.find(space => space.value === selectedSpace)?.text || '';
-  const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || '';
-  // const selectedChannelText = channels.find(channel => channel.value === selectedChannel)?.text || '';
-  const selectedChannelText = ' masih'
-  // const card_content = 
-  //   {
-  //     children: [],
-  //     id: 'all-channels',
-  //     name: 'Container',
-  //     props: { spacing: 'md' },
-  //   }
-  // const details = []
-  // for (let i = 0; i< ch.length; i++){
-  //   const selectedSpaceText = spaces.find(space => space.value === ch[i].spaceIds)?.text || '';
-  //   const selectedTeamText = teams.find(team => team.value === ch[i].teamId)?.text || '';
-  //   const selectedChannelText = channels.find(channel => channel.value === ch[i].channelId)?.text || '';
-  //   details.push({
-  //     id: 'details'+i,
-  //     name: 'Text',
-  //     props: { value: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: ${selectedChannelText}` },
-  //   })
-  //   card_content.children.push('details'+i)
-  // }
-  // console.log('details', details)
-  // console.log('card_content', card_content)
-  
   return {
     rootBlock: 'root',
     blocks: [
@@ -70,39 +35,35 @@ export const getConnectedSettingsSlate2 = async (options: {
         id: 'root',
         name: 'Container',
         props: { spacing: 'md' },
-        children: ['chanels-integration', 'adding-teams', 'auth','channels' ],
+        children: ['chanels-integration', 'adding-teams', 'auth', 'channels'],
       },
-      {
-        id: 'channels',
-        name: 'Card',
-        children: ['all-channels'],
-      },
-
-      
   
-    
 
-    ...getAuthSettingsBlocks({
-      teams,
-      channels,
-      spaces,
-      childern: ch,
+
+      ...(await getAuthSettingsBlocks({
+        teams,
+        channels,
+        spaces,
+        token,
+        childern: ch,
         id: 'adding-teams',
-        action: 'Add Connection',
+        action: 'Add Teams',
         title: 'Teams channels',
         actionCallbackId: SettingsBlockCallback.OpenModal,
         actionVariant: 'primary',
-        description: '',
-      }),
-      ...getAuthSettingsBlocks({
+        // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
+        description: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: `,
+      })),
+      ...(await getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
-        actionCallbackId: SettingsBlockCallback.RevokeModal,
+        actionCallbackId: SettingsBlockCallback.AuthVoke,
         actionVariant: 'danger',
+        // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description: `Connected on ${moment(user.createdAt).format(
           'MMMM Do YYYY, h:mm a',
         )}<br>By revoking access, you will lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,
-      }),
+      })),
     ],
   }
 }
