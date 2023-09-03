@@ -11,6 +11,11 @@ export enum SettingsBlockCallback {
   AuthRedirect = 'auth-redirect',
   AuthVoke= 'auth-voke',
   FetchChannels = 'fetch-channels',
-  SaveModal = 'save-modal'
+  SaveModal = 'save-modal',
+  Edit = 'edit',
+  Delete = 'delete',
+  DeleteConfirmation = 'removeBlock',
+  FetchChannelsEdit = 'upgrade'
+
 }
 

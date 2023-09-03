@@ -27,6 +27,7 @@ import {
 import { getListOfChannels, getListOfTeams, getSpaces } from './microsoft-info.logic'
 import { getConnectModalSlate } from './slates/connect-modal.slate'
 import { deleteModal } from './slates/delete-modal.slate'
+import { setEnvironmentData } from 'worker_threads'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -147,23 +148,8 @@ const getFetchChannelsCallbackResponse = async (
       user.microsoftId,
     )
     const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
-
-    for (var i = 0; i < spaces.length; i++) {
-      if (spaces[i].value == spaceId) {
-        let element = spaces[i]
-        spaces.splice(i, 1)
-        spaces.splice(0, 0, element)
-      }
-    }
-
-    for (var i = 0; i < teams.length; i++) {
-      if (teams[i].value == teamId) {
-        let element = teams[i]
-        teams.splice(i, 1)
-        teams.splice(0, 0, element)
-      }
-    }
-
+    const selectedSpace = spaces.find(space => space.value === spaceId)
+    const selectedTeam = teams.find(team => team.value === teamId)
     const channels = await getListOfChannels(accessToken, teamId as string)
     console.log('Channels:', channels)
     console.log('teams:', teamId)
@@ -174,23 +160,11 @@ const getFetchChannelsCallbackResponse = async (
       spaces: spaces,
       teams: teams,
       channels: channels,
-      showTeams: true,
+      defaultValues: {
+        teamId: selectedTeam.value,
+        spaceId: selectedSpace.value,
+      },
     })
-    console.log(
-      JSON.stringify({
-        type: WebhookType.Interaction,
-        status: WebhookStatus.Succeeded,
-        data: {
-          interactions: [
-            {
-              id: data.interactionId,
-              type: InteractionType.Show,
-              slate: rawSlateToDto(updatedModalSlate),
-            },
-          ],
-        },
-      }),
-    )
     // Return the updated slate to the modal
     return {
       type: WebhookType.Interaction,
@@ -206,7 +180,7 @@ const getFetchChannelsCallbackResponse = async (
       },
     }
   } catch (error) {
-    console.error('Error fetching channels:')
+    console.error('Error fetching channels:', error)
     // Handle the error in some way, e.g., show an error toast to the user
     return getOpenToastCallbackResponse({
       networkId: networkId,
@@ -218,7 +192,7 @@ const getFetchChannelsCallbackResponse = async (
     })
   }
 }
-const getFetchChannelsCallbackResponseUpgrade = async (
+const getFetchChannelsEditModeCallbackResponse = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const { networkId, data } = options
@@ -263,6 +237,8 @@ const getFetchChannelsCallbackResponseUpgrade = async (
     const updatedModalSlate = await getConnectModalSlate({
       objectId: id,
       upgradeMode: true,
+      editMode: true,
+      //TODO: actionCallbckId: SettingsBlockCallback.U
       spaces: spaces,
       teams: teams,
       channels: channels,
@@ -529,7 +505,7 @@ const getRedirectCallbackResponse = async (options: {
     ],
   },
 })
-const handleDeleteBlockSure = async (
+const handleDeleteBlockConfirmationCallback = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const {
@@ -561,7 +537,7 @@ const handleDeleteBlockSure = async (
     },
   }
 }
-const handleDeleteBlock = async (
+const handleDeleteBlockCallback = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const {
@@ -590,7 +566,7 @@ const handleDeleteBlock = async (
     },
   }
 }
-const handleEditBlock = async (
+const handleEditBlockCallback = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
   const {
@@ -641,17 +617,22 @@ export const getCallbackResponse = async (
   // if (callbackId === 'modal_submit') {
   //   return handleModalSubmit(networkId, formData);
   // }
-  if (callbackId.includes('edit')) {
-    return handleEditBlock(options)
-  } else if (callbackId.includes('delete')) {
-    return handleDeleteBlock(options)
-  } else if (callbackId.includes('removeBlock')) {
-    return handleDeleteBlockSure(options)
-  } else if (callbackId.includes('updateBlock')) {
+  //edit modal
+  //not camel case
+  if (callbackId.includes(SettingsBlockCallback.Edit)) {
+    //Callbackresponse
+    return handleEditBlockCallback(options)
+  } else if (callbackId.includes(SettingsBlockCallback.Delete)) {
+    return handleDeleteBlockCallback(options)
+  } else if (callbackId.includes(SettingsBlockCallback.DeleteConfirmation)) {
+    //confirmation
+    return handleDeleteBlockConfirmationCallback(options)
+  } else if (callbackId.includes(SettingsBlockCallback.Update)) {
     return handleUpdateButtonClick(options)
-  } else if (callbackId.includes('upgrade')) {
-    return getFetchChannelsCallbackResponseUpgrade(options)
+  } else if (callbackId.includes(SettingsBlockCallback.FetchChannelsEdit)) {
+    return getFetchChannelsEditModeCallbackResponse(options)
   }
+  //save modal
   switch (callbackId) {
     case SettingsBlockCallback.AuthVoke:
       return getAuthRevokeCallbackResponse(options)

@@ -23,11 +23,10 @@ export const handleMemberSubscription = async (
   let message: string = ''
   const gqlClient = await getNetworkClient(networkId)
   const member = await getMember(gqlClient, id)
-  const channels = (
-    await ChannelRepository.findMany({
+  const channels = await ChannelRepository.findMany({
       where: { networkId: networkId, events: { has: name } },
     })
-  ).map(channel => channel.channelId)
+  const channelIds = channels.map(channel => channel.channelId)
 
   switch (verb) {
     case EventVerb.VERIFIED:
@@ -36,5 +35,5 @@ export const handleMemberSubscription = async (
     default:
       break
   }
-  if (message && channels.length > 0) await sendProactiveMessage(message, channels)
+  if (message && channels.length > 0) await sendProactiveMessage(message, channelIds)
 }

@@ -1,4 +1,5 @@
 import { InputIds, Space } from '@tribeplatform/gql-client/types'
+import {events} from './constants/events.constant'
 import { RawSlateDto } from '@tribeplatform/slate-kit/dtos'
 import { SettingsBlockCallback } from '../constants'
 import { ChannelRepository } from '@/repositories/channel.repository'
@@ -6,61 +7,50 @@ import { ChannelRepository } from '@/repositories/channel.repository'
 export const getConnectModalSlate = async (options?: {
   objectId?: string
   upgradeMode?: boolean
-  showEnvPicker?: true
   spaces?: object
   teams?: InputIds[]
   channels?: object // Add channels option
-  showTeams?: boolean
   editMode?: boolean
   team?: InputIds
   space?: InputIds
   channel?: InputIds
+  /////////////////////////////
+  formCallbackId?: string
+  channelCallbackId?: string
+  defaultValues?: any
+  buttonVariant?: string
+  buttonText?: string
 }): Promise<RawSlateDto> => {
   const {
     spaces,
     teams,
     channels,
-    showTeams,
     editMode,
     team,
     channel,
     space,
     objectId,
     upgradeMode,
+    defaultValues
   } = options || {}
   let channelRep: any
-  const eventsList = [
-    'post.published',
-    'member.verified',
-    'member_invitation.created',
-    'space_join_request.accepted',
-    'space_join_request.created',
-    'moderation.created',
-    'moderation.rejected',
-    'moderation.accepted',
-    'space_membership.deleted',
-    'space_membership.created',
-  ]
-  const eventBlocks = eventsList.map(event => {
-    return {
-      id: event,
-      name: 'Toggle',
-      props: { name: event, label: event, checked: false },
-    }
-  })
+
+  //TODO:
   let mappedEvents
   if (objectId) {
     channelRep = await ChannelRepository.findUnique(objectId)
+    console.log('channelRep in edit', channelRep)
+    
     mappedEvents = channelRep.events.reduce(
       (accumulator, event) => ({
         ...accumulator,
         [event]: true,
       }),
-      { teamId: team.value, spaceId: space.value, channelId: channel.value },
+      { teamId: teams[0].value? teams[0].value:null, spaceId: spaces[0].value?spaces[0].value:null, channelId: channels[0].value?channels[0].value:null },
     )
   }
 
-  console.log('channelRep in edit', channelRep)
+  // console.log('channelRep in edit', channelRep)
   const id = Math.floor(Math.random() * Date.now()).toString(36)
   return {
     rootBlock: id,
@@ -73,13 +63,9 @@ export const getConnectModalSlate = async (options?: {
             editMode || upgradeMode
               ? SettingsBlockCallback.Update + '-' + objectId
               : SettingsBlockCallback.SaveModal,
-
           defaultValues: editMode
             ? mappedEvents
-            : {
-                teamId: showTeams ? teams[0].value : [],
-                spaceId: spaces[0].value,
-              },
+            : defaultValues,
 
           spacing: 'md',
         },
@@ -116,9 +102,15 @@ export const getConnectModalSlate = async (options?: {
         id: 'auth.toggle.body',
         name: 'Card.Content',
         props: { spacing: 'md' },
-        children: [...eventsList],
+        children: [...(events.map(event => (event.id)))],
       },
-      ...eventBlocks,
+      ...(events.map(event => {
+        return {
+          id: event.id,
+          name: 'Toggle',
+          props: { name: event.id, label: event.id, checked: false },
+        }
+      })),
       {
         id: 'auth.spacePicker',
         name: 'Select',

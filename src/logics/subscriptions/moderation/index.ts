@@ -38,7 +38,7 @@ export const handleModerationSubscription = async (
 
   switch (verb) {
     case EventVerb.CREATED:
-      message = `${member ? member.name : post.name} was flagged for moderation`
+      message = `${member ? member.name : "A post"} was flagged for moderation`
       break
     case EventVerb.REJECTED:
       message = `${actor.name} approved this post`

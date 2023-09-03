@@ -5,7 +5,7 @@ import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
 
 import { ChannelRepository } from '@/repositories/channel.repository'
 import { getConnectModalSlate } from './slates/connect-modal.slate'
-import { getConnectedSettingsSlate2 } from './slates/connected-inputAdded.slate'
+import { getConnectedSettingsSlate2 } from './slates/connected-channeles-added.slate'
 import { getConnectedSettingsSlate } from './slates/connected.slate'
 import { getNotConnectedSettingsSlate } from './slates/not-connected.slate'
 import { getListOfChannels, getListOfTeams } from './microsoft-info.logic'
@@ -38,7 +38,7 @@ export const getConnectedSettingsResponse = async (
   }
 }
 
-export const withDetails = async (
+export const getConnectSettingsWithChannelsResponse = async (
   options: InteractionWebhook,
   user: Network,
 ): Promise<InteractionWebhookResponse> => {
@@ -121,6 +121,11 @@ export const getConnectModalResponse = async (options: {
   team?: object
   space?: object
   channel?: object
+  formCallbackId?: string
+  channelCallbackId?: string
+  defaultValues?: any
+  buttonVariant?: string
+  buttonText?: string
   // interactionId: string
 }): Promise<InteractionWebhookResponse> => {
   const { id, editMode, spaces, teams, channels, team, space, channel } = options

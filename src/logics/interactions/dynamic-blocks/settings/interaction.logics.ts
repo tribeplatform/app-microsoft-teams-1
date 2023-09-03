@@ -8,7 +8,7 @@ import { getCallbackResponse } from './callback.logics'
 import {
   getConnectedSettingsResponse,
   getDisconnectedSettingsResponse,
-  withDetails,
+  getConnectSettingsWithChannelsResponse,
 } from './helper'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
@@ -26,15 +26,15 @@ export const getNetworkSettingsInteractionResponse = async (
   }
 
   const network = await NetworkRepository.findUnique(networkId)
-  const info = await ChannelRepository.findMany()
+  const channelsRep = await ChannelRepository.findMany()
 
   if (!network) {
     return getDisconnectedSettingsResponse({
       interactionId,
     })
   }
-  if (info.length > 0) {
-    return withDetails(options, network)
+  if (channelsRep.length > 0) {
+    return getConnectSettingsWithChannelsResponse(options, network)
   }
   if (network) {
     return getConnectedSettingsResponse(options.data, network)
