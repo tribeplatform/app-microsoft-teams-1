@@ -10,6 +10,8 @@ import { getConnectedSettingsSlate } from './slates/connected.slate'
 import { getNotConnectedSettingsSlate } from './slates/not-connected.slate'
 import { getListOfChannels, getListOfTeams } from './microsoft-info.logic'
 import { getAppToken } from '@/logics/oauth.logic'
+import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
+import { channelTemplate } from './slates/channel.slate'
 // import { getConnectedSettingsSlate } from './slates/connected-settings.slate'
 
 export const getConnectedSettingsResponse = async (
@@ -113,14 +115,9 @@ export const getDisconnectedSettingsResponse = async (options: {
 
 export const getConnectModalResponse = async (options: {
   id?: string
-  editMode?: boolean
-  user: Network
   spaces?: object
   teams?: object
   channels?: object
-  team?: object
-  space?: object
-  channel?: object
   formCallbackId?: string
   channelCallbackId?: string
   defaultValues?: any
@@ -128,17 +125,28 @@ export const getConnectModalResponse = async (options: {
   buttonText?: string
   // interactionId: string
 }): Promise<InteractionWebhookResponse> => {
-  const { id, editMode, spaces, teams, channels, team, space, channel } = options
-
-  const slate = await getConnectModalSlate({
-    objectId: id,
-    editMode,
-    team,
-    space,
-    channel,
+  const {
+    id,
     spaces,
     teams,
     channels,
+    defaultValues,
+    formCallbackId,
+    channelCallbackId,
+    buttonText,
+    buttonVariant,
+  } = options
+
+  const slate = await getConnectModalSlate({
+    channelCallbackId,
+    formCallbackId,
+    objectId: id,
+    buttonText,
+    buttonVariant,
+    spaces,
+    teams,
+    channels,
+    defaultValues,
   })
   return {
     type: WebhookType.Interaction,
@@ -187,4 +195,35 @@ export const getOpenToastCallbackResponse = (options: {
       ],
     },
   }
+}
+export const channelMaker = async (options: {
+  id
+  childern
+  spaces
+  token
+  teams
+}): Promise<RawBlockDto[]> => {
+  const { childern, token, id, spaces, teams } = options
+  const channelsConnected = []
+  for (let i = 0; i < childern.length; i++) {
+    const selectedSpaceText =
+      spaces.find(space => space.value === childern[i].spaceIds)?.text || ''
+    const selectedTeamText = teams.find(team => team.value === childern[i].teamId)
+    const channel = await getListOfChannels(token, selectedTeamText.value)
+    const selectedChannelText =
+      channel.find(channel => channel.value === childern[i].channelId)?.text || ''
+    const selectedObjectId = childern[i].id
+    channelsConnected.push(
+      await channelTemplate({
+        id: id,
+        i: i,
+        selectedSpaceText: selectedSpaceText,
+        selectedTeamText: selectedTeamText,
+        selectedObjectId: selectedObjectId,
+        selectedChannelText: selectedChannelText,
+      }),
+    )
+  }
+  console.log('channelsConnected',)
+  return  [].concat(...channelsConnected)
 }

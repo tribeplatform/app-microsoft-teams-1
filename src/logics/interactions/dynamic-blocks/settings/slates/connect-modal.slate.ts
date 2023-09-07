@@ -1,19 +1,13 @@
 import { InputIds, Space } from '@tribeplatform/gql-client/types'
-import {events} from './constants/events.constant'
+import { events } from './constants/events.constant'
 import { RawSlateDto } from '@tribeplatform/slate-kit/dtos'
 import { SettingsBlockCallback } from '../constants'
-import { ChannelRepository } from '@/repositories/channel.repository'
 
 export const getConnectModalSlate = async (options?: {
   objectId?: string
-  upgradeMode?: boolean
   spaces?: object
   teams?: InputIds[]
   channels?: object // Add channels option
-  editMode?: boolean
-  team?: InputIds
-  space?: InputIds
-  channel?: InputIds
   /////////////////////////////
   formCallbackId?: string
   channelCallbackId?: string
@@ -25,32 +19,12 @@ export const getConnectModalSlate = async (options?: {
     spaces,
     teams,
     channels,
-    editMode,
-    team,
-    channel,
-    space,
-    objectId,
-    upgradeMode,
-    defaultValues
+    formCallbackId,
+    channelCallbackId,
+    defaultValues,
+    buttonText,
+    buttonVariant,
   } = options || {}
-  let channelRep: any
-
-  //TODO:
-  let mappedEvents
-  if (objectId) {
-    channelRep = await ChannelRepository.findUnique(objectId)
-    console.log('channelRep in edit', channelRep)
-    
-    mappedEvents = channelRep.events.reduce(
-      (accumulator, event) => ({
-        ...accumulator,
-        [event]: true,
-      }),
-      { teamId: teams[0].value? teams[0].value:null, spaceId: spaces[0].value?spaces[0].value:null, channelId: channels[0].value?channels[0].value:null },
-    )
-  }
-
-  // console.log('channelRep in edit', channelRep)
   const id = Math.floor(Math.random() * Date.now()).toString(36)
   return {
     rootBlock: id,
@@ -59,13 +33,8 @@ export const getConnectModalSlate = async (options?: {
         id: id,
         name: 'Form',
         props: {
-          callbackId:
-            editMode || upgradeMode
-              ? SettingsBlockCallback.Update + '-' + objectId
-              : SettingsBlockCallback.SaveModal,
-          defaultValues: editMode
-            ? mappedEvents
-            : defaultValues,
+          callbackId: formCallbackId ? formCallbackId : SettingsBlockCallback.SaveModal,
+          defaultValues: defaultValues,
 
           spacing: 'md',
         },
@@ -102,15 +71,15 @@ export const getConnectModalSlate = async (options?: {
         id: 'auth.toggle.body',
         name: 'Card.Content',
         props: { spacing: 'md' },
-        children: [...(events.map(event => (event.id)))],
+        children: [...events.map(event => event.id)],
       },
-      ...(events.map(event => {
+      ...events.map(event => {
         return {
           id: event.id,
           name: 'Toggle',
           props: { name: event.id, label: event.id, checked: false },
         }
-      })),
+      }),
       {
         id: 'auth.spacePicker',
         name: 'Select',
@@ -125,8 +94,8 @@ export const getConnectModalSlate = async (options?: {
         id: 'auth.teamId',
         name: 'Select',
         props: {
-          callbackId: editMode
-            ? 'upgrade-' + objectId
+          callbackId: channelCallbackId
+            ? channelCallbackId
             : SettingsBlockCallback.FetchChannels,
 
           name: 'teamId',
@@ -150,13 +119,10 @@ export const getConnectModalSlate = async (options?: {
         id: 'auth.save',
         name: 'Button',
         props: {
-          callbackId:
-            editMode || upgradeMode
-              ? SettingsBlockCallback.Update + '-' + objectId
-              : SettingsBlockCallback.SaveModal, // Callback ID for the "Save" button
+          callbackId: formCallbackId ? formCallbackId : SettingsBlockCallback.SaveModal, // Callback ID for the "Save" button
           type: 'submit', // You can use 'submit' if it's a form submit button
-          variant: editMode || upgradeMode ? 'basic' : 'primary',
-          text: editMode || upgradeMode ? 'Update' : 'Save',
+          variant: buttonVariant ? 'basic' : 'primary',
+          text: buttonText ? 'Update' : 'Save',
         },
       },
       {

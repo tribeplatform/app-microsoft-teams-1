@@ -123,7 +123,6 @@ const getOpenModalCallbackResponse = async (
   console.log('teams:', teams)
 
   return getConnectModalResponse({
-    user: await NetworkRepository.findUniqueOrThrow(networkId),
     spaces: spaces, // Pass the spaces dictionary to the 'spaces' parameter in getConnectModalResponse
     teams: teams,
     channels: [],
@@ -212,23 +211,26 @@ const getFetchChannelsEditModeCallbackResponse = async (
     )
     const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
 
-    for (var i = 0; i < spaces.length; i++) {
-      if (spaces[i].value == spaceId) {
-        let element = spaces[i]
-        spaces.splice(i, 1)
-        spaces.splice(0, 0, element)
-      }
-    }
-
-    for (var i = 0; i < teams.length; i++) {
-      if (teams[i].value == teamId) {
-        let element = teams[i]
-        teams.splice(i, 1)
-        teams.splice(0, 0, element)
-      }
-    }
-    console.log('errrrroorororororor')
+    const selectedSpace = spaces.find(space => space.value === spaceId)
+    const selectedTeam = teams.find(team => team.value === teamId)
     const channels = await getListOfChannels(accessToken, teamId as string)
+
+    const channelRep = await ChannelRepository.findUnique(id)
+    console.log('channelRep in edit', channelRep)
+
+    const defaultValues = channelRep.events.reduce(
+      (accumulator, event) => ({
+        ...accumulator,
+        [event]: true,
+      }),
+      {
+        teamId: selectedTeam.value,
+        spaceId: selectedSpace.value,
+      },
+    )
+
+    const formCallbackId = SettingsBlockCallback.Update + '-' + id
+    const channelCallbackId = SettingsBlockCallback.FetchChannelsEdit + '-' + id
     console.log('Channels:', channels)
     console.log('teams:', teamId)
     console.log('spaces:', spaceId)
@@ -236,13 +238,14 @@ const getFetchChannelsEditModeCallbackResponse = async (
     // Now that you have the channels, update the slate with the new items for the channels dropdown
     const updatedModalSlate = await getConnectModalSlate({
       objectId: id,
-      upgradeMode: true,
-      editMode: true,
+      formCallbackId: formCallbackId,
+      channelCallbackId: channelCallbackId,
+      
       //TODO: actionCallbckId: SettingsBlockCallback.U
       spaces: spaces,
       teams: teams,
       channels: channels,
-      showTeams: true,
+      defaultValues: defaultValues,
     })
 
     return {
@@ -589,17 +592,28 @@ const handleEditBlockCallback = async (
   const spacesMap = spaces.map(space => ({ value: space.id, text: space.name }))
   const spaceMap = { value: space.id, text: space.name }
   console.log('space ', space, 'team ', team, 'channel ', channel)
+  const formCallbackId = SettingsBlockCallback.Update + '-' + id
+  const channelCallbackId = SettingsBlockCallback.FetchChannelsEdit + '-' + id
+  const defaultValues = user.events.reduce(
+    (accumulator, event) => ({
+      ...accumulator,
+      [event]: true,
+    }),
+    {
+      teamId: team.value,
+      spaceId: spaceMap.value,
+      channelId: channel.value,
+    },
+  )
 
   return getConnectModalResponse({
-    id,
+    channelCallbackId: channelCallbackId,
     spaces: spacesMap,
+    formCallbackId: formCallbackId,
     teams,
     channels,
-    editMode: true,
-    user: userRep,
-    space: spaceMap, // Pass the spaces dictionary to the 'spaces' parameter in getConnectModalResponse
-    team: team,
     channel: channel,
+    defaultValues: defaultValues,
   })
 }
 
