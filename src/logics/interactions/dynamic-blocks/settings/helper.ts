@@ -5,10 +5,10 @@ import { rawSlateToDto } from '@tribeplatform/slate-kit/utils'
 
 import { ChannelRepository } from '@/repositories/channel.repository'
 import { getConnectModalSlate } from './slates/connect-modal.slate'
-import { getConnectedSettingsSlate2 } from './slates/connected-channeles-added.slate'
+import { getConnectedSettingsSlate2 } from './slates/connected-channels.slate'
 import { getConnectedSettingsSlate } from './slates/connected.slate'
 import { getNotConnectedSettingsSlate } from './slates/not-connected.slate'
-import { getListOfChannels, getListOfTeams } from './microsoft-info.logic'
+import { getListOfChannels, getListOfTeams, getSpaces } from './microsoft-info.logic'
 import { getAppToken } from '@/logics/oauth.logic'
 import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 import { channelTemplate } from './slates/channel.slate'
@@ -47,37 +47,27 @@ export const getConnectSettingsWithChannelsResponse = async (
   const { networkId, data } = options
   const { interactionId } = data
 
-  const ch = await ChannelRepository.findMany()
-  // [chanle1,chan2]
-  // ch[0].channelId
+  const children = await ChannelRepository.findMany()
 
-  const selectedChannel = ch[0].channelId
-  const selectedSpace = ch[0].spaceIds
-  const selectedteam = ch[0].teamId
-  const channelsw = []
+  const selectedSpace = children[0].spaceIds
+  const selectedteam = children[0].teamId
   const token = await getAppToken(user.tenantId)
   const teams = await getListOfTeams(token, user.microsoftId)
-
-  // const channels = await getListOfChannels(token, selectedteam, );
+  const spacesList = await getSpaces(user.networkId)
+  const spaces = spacesList.map(space => ({ value: space.id, text: space.name }))
+  const id = 'adding-teams'
+  const channels = await channelMaker({id, children, spaces, token, teams})
+  const selectedSpaceText =
+  spaces.find(space => space.value === selectedSpace)?.text || ''
+  const selectedTeamText = teams.find(team => team.value === selectedteam)?.text || ''
 
   const slate = getConnectedSettingsSlate2({
     user,
-    selectedChannel,
-    selectedSpace,
-    selectedteam,
-    teams,
-    // channels,
-    token,
-    ch,
+    selectedSpaceText,
+    selectedTeamText,
+    children,
+    channels,
   })
-
-  // const slate = getConnectedSettingsSlate2({
-  //   user,
-  //   selectedChannel,
-  //   selectedSpace,
-  //   selectedteam
-
-  // })
   return {
     type: WebhookType.Interaction,
     status: WebhookStatus.Succeeded,
@@ -198,21 +188,21 @@ export const getOpenToastCallbackResponse = (options: {
 }
 export const channelMaker = async (options: {
   id
-  childern
+  children
   spaces
   token
   teams
 }): Promise<RawBlockDto[]> => {
-  const { childern, token, id, spaces, teams } = options
+  const { children, token, id, spaces, teams } = options
   const channelsConnected = []
-  for (let i = 0; i < childern.length; i++) {
+  for (let i = 0; i < children.length; i++) {
     const selectedSpaceText =
-      spaces.find(space => space.value === childern[i].spaceIds)?.text || ''
-    const selectedTeamText = teams.find(team => team.value === childern[i].teamId)
+      spaces.find(space => space.value === children[i].spaceIds)?.text || ''
+    const selectedTeamText = teams.find(team => team.value === children[i].teamId)
     const channel = await getListOfChannels(token, selectedTeamText.value)
     const selectedChannelText =
-      channel.find(channel => channel.value === childern[i].channelId)?.text || ''
-    const selectedObjectId = childern[i].id
+      channel.find(channel => channel.value === children[i].channelId)?.text || ''
+    const selectedObjectId = children[i].id
     channelsConnected.push(
       await channelTemplate({
         id: id,
@@ -224,6 +214,5 @@ export const channelMaker = async (options: {
       }),
     )
   }
-  console.log('channelsConnected',)
   return  [].concat(...channelsConnected)
 }

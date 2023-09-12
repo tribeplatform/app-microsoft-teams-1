@@ -37,7 +37,7 @@ export const handleSpaceJoinRequestSubscription = async (
     getSpace(gqlClient, spaceId),
     getMember(gqlClient, updatedById),
   ])
-
+  const mode = 'space'
   switch (verb) {
     case EventVerb.CREATED:
       message = `${member} requested to join ${space.name}`
@@ -49,5 +49,5 @@ export const handleSpaceJoinRequestSubscription = async (
       break
   }
   if (message && channels.length > 0)
-    await sendProactiveMessage(message, channels, space.url)
+    await sendProactiveMessage(message, channels, space.url, null, mode)
 }

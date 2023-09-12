@@ -13,9 +13,9 @@ export const getPost = async ( tribeClient ,postId: string) => {
     return post;
 }
 
-export const sendProactiveMessage = async (message: string, channels: string[], url?, title?) => {
+export const sendProactiveMessage = async (message: string, channels: string[], url?, title?, mode?: string) => {
   const options = {
-    
+    mode: mode ? mode : 'default',
     message: message,
     channelIds: channels,
     url: url ? url : null,

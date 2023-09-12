@@ -1,14 +1,13 @@
-import { InputIds, Space } from '@tribeplatform/gql-client/types'
 import { events } from './constants/events.constant'
 import { RawSlateDto } from '@tribeplatform/slate-kit/dtos'
 import { SettingsBlockCallback } from '../constants'
 
 export const getConnectModalSlate = async (options?: {
+  id?: string
   objectId?: string
   spaces?: object
-  teams?: InputIds[]
-  channels?: object // Add channels option
-  /////////////////////////////
+  teams?: object
+  channels?: object
   formCallbackId?: string
   channelCallbackId?: string
   defaultValues?: any
@@ -25,7 +24,7 @@ export const getConnectModalSlate = async (options?: {
     buttonText,
     buttonVariant,
   } = options || {}
-  const id = Math.floor(Math.random() * Date.now()).toString(36)
+  const id = options.id || Math.floor(Math.random() * Date.now()).toString(36)
   return {
     rootBlock: id,
     blocks: [
@@ -65,7 +64,7 @@ export const getConnectModalSlate = async (options?: {
       {
         id: 'auth.toggle.title',
         name: 'Card.Header',
-        props: { title: 'Subscribtion toggles' },
+        props: { title: 'Manage notification events' },
       },
       {
         id: 'auth.toggle.body',
@@ -77,7 +76,7 @@ export const getConnectModalSlate = async (options?: {
         return {
           id: event.id,
           name: 'Toggle',
-          props: { name: event.id, label: event.id, checked: false },
+          props: { name: event.id, label: event.value },
         }
       }),
       {

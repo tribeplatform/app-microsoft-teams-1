@@ -40,6 +40,8 @@ export interface EventWith {
 }
 
 export interface EventTarget {
+
+  
   organizationId?: string
   networkId?: string
   invitationLinkId?: string

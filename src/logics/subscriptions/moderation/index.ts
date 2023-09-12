@@ -13,7 +13,7 @@ export const handleModerationSubscription = async (
 ): Promise<void> => {
   const {
     networkId,
-    data: { verb, object, name },
+    data: { verb, object, name, actor: { id }, target: {postId} },
   } = webhook
   logger.debug('handleModerationSubscription called', { webhook })
   const gqlClient = await getNetworkClient(networkId)
@@ -27,13 +27,12 @@ export const handleModerationSubscription = async (
   ).map(channel => channel.channelId)
 
   if (object.entityType === Types.ModerationEntityType.POST)
-    post = await getPost(gqlClient, object.entityId)
+    post = await getPost(gqlClient, postId)
   else if (object.entityType === Types.ModerationEntityType.MEMBER)
-    member = await getMember(gqlClient, object.createdById)
+    member = await getMember(gqlClient, id)
 
-  const [actor, space] = await Promise.all([
-    getMember(gqlClient, (object as Types.Post)?.createdById),
-    getSpace(gqlClient, (object as Types.Post)?.spaceId),
+  const [actor] = await Promise.all([
+    getMember(gqlClient, id),
   ])
 
   switch (verb) {
@@ -50,5 +49,5 @@ export const handleModerationSubscription = async (
       break
   }
   if (message && channels.length > 0)
-    await sendProactiveMessage(message, channels, space.url)
+    await sendProactiveMessage(message, channels, post.url)
 }

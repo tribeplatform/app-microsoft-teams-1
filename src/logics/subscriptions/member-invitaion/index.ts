@@ -14,7 +14,7 @@ export const handleMemberInvitaionSubscription = async (
 
   const {
     networkId,
-    data: { name, verb, object },
+    data: { name, verb, object, target },
   } = webhook
   let message: string = ''
   const member = {
@@ -38,6 +38,9 @@ export const handleMemberInvitaionSubscription = async (
     ).map(channel => channel.channelId)
     channels.push(...channel)
   }
+  const url = member.url || `https://${target.networkDomain}/member/${member.id}`
+  const mode = 'userWithUrl'
+  console.log(url)
   switch (verb) {
     case EventVerb.CREATED:
       message = `${actor.name} invited ${member.email} to the community.`
@@ -45,5 +48,5 @@ export const handleMemberInvitaionSubscription = async (
     default:
       break
   }
-  if (message && channels.length > 0) await sendProactiveMessage(message, channels)
+  if (message && channels.length > 0) await sendProactiveMessage(message, channels,url,null ,mode)
 }

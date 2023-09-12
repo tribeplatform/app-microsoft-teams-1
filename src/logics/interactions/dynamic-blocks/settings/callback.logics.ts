@@ -28,6 +28,7 @@ import { getListOfChannels, getListOfTeams, getSpaces } from './microsoft-info.l
 import { getConnectModalSlate } from './slates/connect-modal.slate'
 import { deleteModal } from './slates/delete-modal.slate'
 import { setEnvironmentData } from 'worker_threads'
+import { sendProactiveMessage } from '@/logics/subscriptions/helper'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -346,7 +347,7 @@ const handleSaveButtonClick = async (
       const title = 'Community Bot is connected!'
       const message =
         'Hi there, *Community Bot* is here! I would inform you on community updates in this channel.'
-      //  sendProactiveMessage('Hello amir', [channelId as string])
+       sendProactiveMessage(message, [channelId as string], null, title, 'user')
     } catch (e) {
       console.log(e)
     }

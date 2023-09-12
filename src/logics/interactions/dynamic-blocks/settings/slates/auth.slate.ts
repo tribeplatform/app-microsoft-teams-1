@@ -2,29 +2,21 @@ import { RawBlockDto } from '@tribeplatform/slate-kit/dtos'
 
 import { SettingsBlockCallback } from '../constants'
 import { title } from 'process'
-import { getListOfChannels } from '../microsoft-info.logic'
-
-import { channelMaker } from '../helper'
-export const getAuthSettingsBlocks = async (options: {
-  childern?: any
+export const getAuthSettingsBlocks = (options: {
+  children?: any
   id: string
   description: string
   action: string
   title?: string
-  spaces?
-  teams?
+
   channels?
-  token?
+
   actionVariant: 'outline' | 'primary' | 'danger'
   actionCallbackId: SettingsBlockCallback
-  secondaryAction?: string
-  secondaryActionCallbackId?: SettingsBlockCallback
-}): Promise<RawBlockDto[]> => {
+}): RawBlockDto[] => {
   const {
-    token,
-    spaces,
-    teams,
-    childern,
+    channels,
+    children,
     id,
     title,
     description,
@@ -32,7 +24,7 @@ export const getAuthSettingsBlocks = async (options: {
     actionVariant,
     actionCallbackId,
   } = options
-  const length = childern?.length || 0
+  const length = children?.length || 0
   // const card_content = {
   //   id: `${id}.card`,
   //   name: 'Container',
@@ -41,7 +33,6 @@ export const getAuthSettingsBlocks = async (options: {
   // }
   // const details = []
 
- 
   // if (childern) {
   //   console.log( ...childern.map((child, i) => `${id}.${i}.cardContent`))
   //   for (let i = 0; i < childern.length; i++) {
@@ -166,7 +157,7 @@ export const getAuthSettingsBlocks = async (options: {
   //     )
   //     // card_content.children.push(`${id}.${i}.card`)
   //   }
-  
+
   // }
   return [
     {
@@ -189,14 +180,19 @@ export const getAuthSettingsBlocks = async (options: {
       id: `${id}.card`,
       name: 'Container',
       props: { direction: 'vertical-reverse', padding: 'xs' },
-      /// write a map function on array chinldren that will return a string like this: ${id}.${i}.cardContent 
-      children: [`${id}.rightContainer`, ...(childern ? childern.map((child, i) => `${id}.${i}.card`) : [`${id}.description`])]
+      /// write a map function on array chinldren that will return a string like this: ${id}.${i}.cardContent
+      children: [
+        `${id}.rightContainer`,
+        ...(children
+          ? children.map((child, i) => `${id}.${i}.card`)
+          : [`${id}.description`]),
+      ],
     },
 
     // card_content,
     // ...details,
-    ...(childern
-      ? await channelMaker({id, childern, spaces, token, teams})
+    ...(children
+      ? channels
       : [
           {
             id: `${id}.description`,

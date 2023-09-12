@@ -17,7 +17,8 @@ export const handleMemberSubscription = async (
     data: {
       verb,
       name,
-      object: { id },
+      object: { id  },
+      target: { networkDomain }
     },
   } = webhook
   let message: string = ''
@@ -26,8 +27,10 @@ export const handleMemberSubscription = async (
   const channels = await ChannelRepository.findMany({
       where: { networkId: networkId, events: { has: name } },
     })
+  const url = member.url || `https://${networkDomain}/member/${member.id}`
+  console.log(url)
   const channelIds = channels.map(channel => channel.channelId)
-
+  const mode = 'user'
   switch (verb) {
     case EventVerb.VERIFIED:
       message = `${member.name} joined the community.`
@@ -35,5 +38,5 @@ export const handleMemberSubscription = async (
     default:
       break
   }
-  if (message && channels.length > 0) await sendProactiveMessage(message, channelIds)
+  if (message && channels.length > 0) await sendProactiveMessage(message, channelIds, url,null ,mode)
 }

@@ -32,10 +32,11 @@ export const handleSpaceMembershipSubscription = async (
   const gqlClient = await getNetworkClient(networkId)
   const [space, actor, member] = await Promise.all([
     getSpace(gqlClient, spaceId),
-    getMember(gqlClient, actorId),
+    getMember(gqlClient, actorId) || null,
     getMember(gqlClient, memberId),
   ])
-  if (actorId === memberId) self = true
+  if (actorId === memberId || actorId === null) self = true
+  const mode = 'space'
   switch (verb) {
     case EventVerb.CREATED:
       if (self == true) {
@@ -53,5 +54,5 @@ export const handleSpaceMembershipSubscription = async (
       break
   }
   if (message && channels.length > 0)
-    await sendProactiveMessage(message, channels, space.url)
+    await sendProactiveMessage(message, channels, space.url,null ,mode)
 }
