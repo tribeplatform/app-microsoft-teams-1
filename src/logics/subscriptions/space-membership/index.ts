@@ -40,16 +40,16 @@ export const handleSpaceMembershipSubscription = async (
   switch (verb) {
     case EventVerb.CREATED:
       if (self == true) {
-        message = `${member} joined ${space.name}`
+        message = `${member.name} joined ${space.name}`
       } else {
-        message = `${actor} added ${member} to ${space.name} `
+        message = `${actor.name} added ${member.name} to ${space.name} `
       }
       break
     case EventVerb.DELETED:
       if (self == true) {
-        message = `${member} left ${space.name}`
+        message = `${member.name} left ${space.name}`
       } else {
-        message = `${actor} removed ${member} from ${space.name}`
+        message = `${actor.name} removed ${member} from ${space.name}`
       }
       break
   }
