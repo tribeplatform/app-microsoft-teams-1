@@ -26,7 +26,7 @@ export const getConnectedSettingsSlate2 = async (options: {
         children,
         id: 'adding-teams',
         action: 'Add Teams',
-        title: 'Teams channels',
+        title: 'Connections',
         actionCallbackId: SettingsBlockCallback.OpenModal,
         actionVariant: 'primary',
         description: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: `,
@@ -34,12 +34,12 @@ export const getConnectedSettingsSlate2 = async (options: {
       ...getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
-        actionCallbackId: SettingsBlockCallback.AuthVoke,
+        actionCallbackId: SettingsBlockCallback.RevokeModal,
         actionVariant: 'danger',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description: `Connected on ${moment(user.createdAt).format(
           'MMMM Do YYYY, h:mm a',
-        )}<br>By revoking access, you will lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,
+        )}<br>By revoking access, you will  lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,
       }),
     ],
   }

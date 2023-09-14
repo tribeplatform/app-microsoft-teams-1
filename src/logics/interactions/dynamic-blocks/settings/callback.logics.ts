@@ -29,6 +29,7 @@ import { getConnectModalSlate } from './slates/connect-modal.slate'
 import { deleteModal } from './slates/delete-modal.slate'
 import { setEnvironmentData } from 'worker_threads'
 import { sendProactiveMessage } from '@/logics/subscriptions/helper'
+import { revokeModal } from './slates/revoke-Modal.slate'
 
 const logger = globalLogger.setContext(`SettingsDynamicBlock`)
 
@@ -570,6 +571,37 @@ const handleDeleteBlockCallback = async (
     },
   }
 }
+
+
+
+const handleRevokeOpenModalCallback = async (
+  options: InteractionWebhook,
+): Promise<InteractionWebhookResponse> => {
+  const {
+    networkId,
+    data: { callbackId, interactionId, inputs },
+  } = options
+
+  const slate = revokeModal()
+  return {
+    type: WebhookType.Interaction,
+    status: WebhookStatus.Succeeded,
+    data: {
+      interactions: [
+        {
+          // id: options.interactionId,
+          id: 'connect to channels',
+          type: InteractionType.OpenModal,
+          props: {
+            size: 'md',
+            title: 'Delete',
+          },
+          slate: rawSlateToDto(await slate),
+        },
+      ],
+    },
+  }
+}
 const handleEditBlockCallback = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
@@ -649,6 +681,8 @@ export const getCallbackResponse = async (
   }
   //save modal
   switch (callbackId) {
+    case SettingsBlockCallback.RevokeModal:
+      return handleRevokeOpenModalCallback(options)
     case SettingsBlockCallback.AuthVoke:
       return getAuthRevokeCallbackResponse(options)
     case SettingsBlockCallback.OpenModal:

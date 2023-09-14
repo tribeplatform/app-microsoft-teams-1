@@ -31,7 +31,7 @@ export const getConnectedSettingsSlate = async (options: {
     ...await getAuthSettingsBlocks({
         id: 'adding-teams',
         action: 'Add Teams',
-        title: 'Teams channels',
+        title: 'Connected channels',
         actionCallbackId: SettingsBlockCallback.OpenModal,
         actionVariant: 'primary',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
@@ -40,7 +40,7 @@ export const getConnectedSettingsSlate = async (options: {
       ...await getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
-        actionCallbackId: SettingsBlockCallback.AuthVoke,
+        actionCallbackId: SettingsBlockCallback.RevokeModal,
         actionVariant: 'danger',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description: `Connected on ${moment(user.createdAt).format(

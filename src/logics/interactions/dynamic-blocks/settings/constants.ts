@@ -1,5 +1,3 @@
-import { NetworkRepository } from "@repositories";
-import { getListOfTeams } from "./microsoft-info.logic";
 
 export enum SettingsBlockCallback {
   Update = 'updateBlock',
@@ -15,7 +13,8 @@ export enum SettingsBlockCallback {
   Edit = 'edit',
   Delete = 'delete',
   DeleteConfirmation = 'removeBlock',
-  FetchChannelsEdit = 'upgrade'
+  FetchChannelsEdit = 'upgrade',
+  RevokeModal = 'revoke-modal',
 
 }
 

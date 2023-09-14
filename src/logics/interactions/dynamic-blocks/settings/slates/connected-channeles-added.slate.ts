@@ -40,7 +40,7 @@ export const getConnectedSettingsSlate2 = async (options: {
   
 
 
-      ...(await getAuthSettingsBlocks({
+      ...getAuthSettingsBlocks({
         teams,
         channels,
         spaces,
@@ -53,17 +53,17 @@ export const getConnectedSettingsSlate2 = async (options: {
         actionVariant: 'primary',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description: `Space: ${selectedSpaceText}<br>Teams: ${selectedTeamText}<br>Channel: `,
-      })),
-      ...(await getAuthSettingsBlocks({
+      }),
+      ...getAuthSettingsBlocks({
         id: 'auth',
         action: 'Revoke',
-        actionCallbackId: SettingsBlockCallback.AuthVoke,
+        actionCallbackId: SettingsBlockCallback.RevokeModal,
         actionVariant: 'danger',
         // secondaryActionCallbackId: SettingsBlockCallback.OpenConnectModal,
         description: `Connected on ${moment(user.createdAt).format(
-          'MMMM Do YYYY, h:mm a',
+          'MMMM Do YYYY, h:mm a'
         )}<br>By revoking access, you will lose your settings and no longer be able to use Microsoft Teams features on Bettermode.`,
-      })),
+      }),
     ],
   }
 }

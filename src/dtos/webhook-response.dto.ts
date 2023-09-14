@@ -1,7 +1,7 @@
 import { ErrorCode, WebhookType } from '@enums'
 import { IsEnum, IsOptional, IsString } from 'class-validator'
 
-import { WebhookStatus } from '../../../../app-microsoft-teams/src/enums/webhook-status.enum'
+import { WebhookStatus } from 'enums/webhook-status.enum'
 
 export class WebhookResponseDto<T = unknown> {
   @IsEnum(WebhookType)
