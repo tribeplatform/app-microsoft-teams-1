@@ -39,7 +39,7 @@ export const handleMemberInvitaionSubscription = async (
     channels.push(...channel)
   }
   const url = member.url || `https://${target.networkDomain}/member/${member.id}`
-  const mode = 'userWithUrl'
+  const mode = 'user'
   console.log(url)
   switch (verb) {
     case EventVerb.CREATED:

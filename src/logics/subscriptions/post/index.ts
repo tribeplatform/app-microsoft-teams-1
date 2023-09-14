@@ -25,7 +25,7 @@ export const handlePostSubscription = async (
   console.log(channleReps, ' channels')
   const gqlClient = await getNetworkClient(networkId)
   const [post, actor, space] = await Promise.all([ getPost(gqlClient, (object as Types.Post)?.id), getMember(gqlClient, (object as Types.Post)?.createdById), getSpace(gqlClient, (object as Types.Post)?.spaceId)])
-  const mode = 'space'
+
   switch (verb) {
     case EventVerb.PUBLISHED:
       message = `${actor.name} added a post with the title ${post.title}!`
@@ -33,5 +33,5 @@ export const handlePostSubscription = async (
     default:
       break
   }
-  await sendProactiveMessage(message, channleReps, post.url,null ,mode)
+  await sendProactiveMessage(message, channleReps, post.url,null)
 }

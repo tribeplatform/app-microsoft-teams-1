@@ -30,7 +30,7 @@ export const handleMemberSubscription = async (
   const url = member.url || `https://${networkDomain}/member/${member.id}`
   console.log(url)
   const channelIds = channels.map(channel => channel.channelId)
-  const mode = 'user'
+  const mode = 'userWithUrl'
   switch (verb) {
     case EventVerb.VERIFIED:
       message = `${member.name} joined the community.`
