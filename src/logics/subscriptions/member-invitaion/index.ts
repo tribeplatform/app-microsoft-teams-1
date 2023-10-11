@@ -38,8 +38,8 @@ export const handleMemberInvitaionSubscription = async (
     ).map(channel => channel.channelId)
     channels.push(...channel)
   }
+  console.log(actor.url, 'url is here')
   const url = member.url || `https://${target.networkDomain}/member/${member.id}`
-  const mode = 'user'
   console.log(url)
   switch (verb) {
     case EventVerb.CREATED:
@@ -48,5 +48,5 @@ export const handleMemberInvitaionSubscription = async (
     default:
       break
   }
-  if (message && channels.length > 0) await sendProactiveMessage(message, channels,url,null ,mode)
+  if (message && channels.length > 0) await sendProactiveMessage({message, channels,mode:name, actorUrl:actor.url})
 }

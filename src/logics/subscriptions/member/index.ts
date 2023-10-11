@@ -28,15 +28,15 @@ export const handleMemberSubscription = async (
       where: { networkId: networkId, events: { has: name } },
     })
   const url = member.url || `https://${networkDomain}/member/${member.id}`
+  console.log(member.url, 'url is here')
   console.log(url)
   const channelIds = channels.map(channel => channel.channelId)
-  const mode = 'userWithUrl'
-  switch (verb) {
+    switch (verb) {
     case EventVerb.VERIFIED:
       message = `${member.name} joined the community.`
       break
     default:
       break
   }
-  if (message && channels.length > 0) await sendProactiveMessage(message, channelIds, url,null ,mode)
+  if (message && channels.length > 0) await sendProactiveMessage({message, channels: channelIds, userUrl:url,mode:name})
 }

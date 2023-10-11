@@ -16,6 +16,7 @@ export const handleSpaceJoinRequestSubscription = async (
     data: {
       name,
       verb,
+      target,
       object: { spaceId, memberId, updatedById },
     },
   } = webhook
@@ -37,17 +38,17 @@ export const handleSpaceJoinRequestSubscription = async (
     getSpace(gqlClient, spaceId),
     getMember(gqlClient, updatedById),
   ])
-  const mode = 'space'
+  const url = member.url || `https://${target.networkDomain}/member/${member.id}`
   switch (verb) {
     case EventVerb.CREATED:
-      message = `${member} requested to join ${space.name}`
+      message = `${member.name} requested to join ${space.name}`
       break
     case EventVerb.ACCEPTED:
-      message = `${actor} accepted ${member}'s request to join ${space.name}`
+      message = `${actor.name} accepted ${member.name}'s request to join ${space.name}`
       break
     default:
       break
   }
   if (message && channels.length > 0)
-    await sendProactiveMessage(message, channels, space.url, null, mode)
+    await sendProactiveMessage({message, channels, spaceUrl:space.url, mode:name, userUrl:url, actorUrl:actor.ur})
 }

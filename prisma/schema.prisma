@@ -36,7 +36,7 @@ model Channel {
   networkId String 
   channelId String
   teamId String
-  spaceIds String[]
+  spaceIds String[] @default([])
   events String[] @default([])
 
   @@index([networkId])

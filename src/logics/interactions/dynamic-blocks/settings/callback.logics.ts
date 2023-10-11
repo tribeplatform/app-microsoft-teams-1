@@ -99,8 +99,27 @@ const getAuthRevokeCallbackResponse = async (
     logger.error(error)
     // return getServiceUnavailableError(webhook)
   }
+  // getDisconnectedSettingsResponse({ interactionId })
 
-  return getDisconnectedSettingsResponse({ interactionId })
+  return {
+    type: WebhookType.Interaction,
+    status: WebhookStatus.Succeeded,
+    data: {
+      interactions: [
+        {
+          id: interactionId,
+          type: InteractionType.Close,
+        },
+        {
+          id: interactionId + 'reaload',
+          type: InteractionType.Reload,
+          props: {
+            dynamicBlockKeys: ['settings'],
+          },
+        },
+      ],
+    },
+  }
 }
 
 const getOpenModalCallbackResponse = async (
@@ -242,7 +261,7 @@ const getFetchChannelsEditModeCallbackResponse = async (
       objectId: id,
       formCallbackId: formCallbackId,
       channelCallbackId: channelCallbackId,
-      
+
       //TODO: actionCallbckId: SettingsBlockCallback.U
       spaces: spaces,
       teams: teams,
@@ -348,7 +367,7 @@ const handleSaveButtonClick = async (
       const title = 'Community Bot is connected!'
       const message =
         'Hi there, *Community Bot* is here! I would inform you on community updates in this channel.'
-       sendProactiveMessage(message, [channelId as string], null, title, 'user')
+      sendProactiveMessage({message, channels:[channelId as string],title: title, mode:'welcome'})
     } catch (e) {
       console.log(e)
     }
@@ -572,8 +591,6 @@ const handleDeleteBlockCallback = async (
   }
 }
 
-
-
 const handleRevokeOpenModalCallback = async (
   options: InteractionWebhook,
 ): Promise<InteractionWebhookResponse> => {
@@ -645,7 +662,6 @@ const handleEditBlockCallback = async (
     formCallbackId: formCallbackId,
     teams,
     channels,
-    channel: channel,
     defaultValues: defaultValues,
   })
 }

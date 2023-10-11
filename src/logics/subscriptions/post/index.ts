@@ -14,7 +14,7 @@ export const handlePostSubscription = async (
   logger.debug('handlePostSubscription called', { webhook })
   const {
     networkId,
-    data: { verb,name, object },
+    data: { verb,name, object, target },
   } = webhook
   let message: string = ''
   const channleReps = (
@@ -28,10 +28,10 @@ export const handlePostSubscription = async (
 
   switch (verb) {
     case EventVerb.PUBLISHED:
-      message = `${actor.name} added a post with the title ${post.title}!`
+      message = `${actor.name} added a ${object.repliedToId ? "reply":"post"}.`
       break
     default:
       break
   }
-  await sendProactiveMessage(message, channleReps, post.url,null)
+  await sendProactiveMessage({message, channels: channleReps , postUrl:post.url, mode:name, userUrl:actor.url})
 }

@@ -18,6 +18,7 @@ export const handleSpaceMembershipSubscription = async (
     data: {
       name,
       verb,
+      target,
       actor: { id: actorId },
       object: { spaceId, memberId },
     },
@@ -35,8 +36,8 @@ export const handleSpaceMembershipSubscription = async (
     getMember(gqlClient, actorId) || null,
     getMember(gqlClient, memberId),
   ])
+  const url = member.url || `https://${target.networkDomain}/member/${member.id}`
   if (actorId === memberId || actorId === null) self = true
-  const mode = 'space'
   switch (verb) {
     case EventVerb.CREATED:
       if (self == true) {
@@ -49,10 +50,10 @@ export const handleSpaceMembershipSubscription = async (
       if (self == true) {
         message = `${member.name} left ${space.name}`
       } else {
-        message = `${actor.name} removed ${member} from ${space.name}`
+        message = `${actor.name} removed ${member.name} from ${space.name}`
       }
       break
   }
   if (message && channels.length > 0)
-    await sendProactiveMessage(message, channels, space.url,null ,mode)
+    await sendProactiveMessage({message, channels,spaceUrl:space.url, mode:name, userUrl:url, actorUrl:actor.url,self})
 }

@@ -25,6 +25,7 @@ export const getNetworkClient = (networkId: string): Promise<TribeClient> => {
   return bettermodeClient.getTribeClient({ networkId })
 }
 
+
 export const getMemberClient = (
   networkId: string,
   memberId: string,

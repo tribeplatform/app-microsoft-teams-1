@@ -13,7 +13,7 @@ export const handleModerationSubscription = async (
 ): Promise<void> => {
   const {
     networkId,
-    data: { verb, object, name, actor: { id }, target: {postId} },
+    data: { verb, object, name, actor: { id }, target },
   } = webhook
   logger.debug('handleModerationSubscription called', { webhook })
   const gqlClient = await getNetworkClient(networkId)
@@ -25,19 +25,23 @@ export const handleModerationSubscription = async (
       where: { networkId: networkId, spaceIds: object?.spaceId, events: { has: name } },
     })
   ).map(channel => channel.channelId)
-
-  if (object.entityType === Types.ModerationEntityType.POST)
-    post = await getPost(gqlClient, postId)
-  else if (object.entityType === Types.ModerationEntityType.MEMBER)
+  let type = ''
+  if (object.entityType === Types.ModerationEntityType.POST){
+    type = 'post'
+  }
+  else if(object.entityType === Types.ModerationEntityType.MEMBER){
+    type = 'member'
+  }
     member = await getMember(gqlClient, id)
-
+    post = await getPost(gqlClient, target.postId)
   const [actor] = await Promise.all([
     getMember(gqlClient, id),
   ])
-
+  console.log(member)
+  const url = `https://${target.networkDomain}/member/${member.id}`
   switch (verb) {
     case EventVerb.CREATED:
-      message = `${member ? member.name : "A post"} was flagged for moderation`
+      message = `A ${type} was flagged for moderation`
       break
     case EventVerb.REJECTED:
       message = `${actor.name} approved this post`
@@ -49,5 +53,5 @@ export const handleModerationSubscription = async (
       break
   }
   if (message && channels.length > 0)
-    await sendProactiveMessage(message, channels, post.url)
+    await sendProactiveMessage({message, channels, postUrl:post.url, mode:name, userUrl:url, actorUrl:actor.url})
 }

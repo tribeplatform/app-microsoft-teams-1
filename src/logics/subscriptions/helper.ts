@@ -13,17 +13,22 @@ export const getPost = async ( tribeClient ,postId: string) => {
     return post;
 }
 
-export const sendProactiveMessage = async (message: string, channels: string[], url?, title?, mode?: string) => {
-  const options = {
+export const sendProactiveMessage = async (options:{message: string, channels: string[], postUrl?,userUrl?,actorUrl?, title?, mode?: string, spaceUrl?, self?}) => {
+  const {message, channels, postUrl, title, mode, userUrl, actorUrl, spaceUrl, self} = options
+  const option = {
     mode: mode ? mode : 'default',
     message: message,
     channelIds: channels,
-    url: url ? url : null,
+    postUrl: postUrl ?postUrl : null,
     title: title ? title : null,
+    userUrl: userUrl ? userUrl : null,
+    actorUrl: actorUrl ? actorUrl : null,
+    spaceUrl: spaceUrl ? spaceUrl : null,
+    self: self ? self : null
   }
   const endpoint = 'http://localhost:3978/api/notification'
   
-    const response = await axios.post(endpoint, options)
+    const response = await axios.post(endpoint, option)
     console.log('message status', response.status)
 
 }
